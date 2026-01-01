@@ -9,6 +9,7 @@ node_modules/
 mobile/.expo/
 mobile/dist/
 mobile/.env
+mobile/.vscode/
 
 # --- System ---
 .DS_Store

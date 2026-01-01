@@ -1,41 +1,71 @@
 /**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
+ * mobile/constants/theme.ts
  */
-
 import { Platform } from 'react-native';
 
-const tintColorLight = '#0a7ea4';
-const tintColorDark = '#fff';
+// 1. Define your primitive color palette here
+const palette = {
+  white: '#FFFFFF',
+  black: '#000000',
+  // Grays
+  gray100: '#F5F5F5',
+  gray200: '#E5E7EB',
+  gray800: '#1F2937',
+  gray900: '#151718',
+  // Brand Colors
+  blue50: '#F0F9FF',
+  blue500: '#0a7ea4',
+  // Functional Colors
+  green500: '#4ADE80',
+  red500: '#EF4444',
+  darkSurface: '#2C2C2E',
+  darkCard: '#1E1E1E',
+};
+
+const tintColorLight = palette.blue500;
+const tintColorDark = palette.white;
 
 export const Colors = {
   light: {
     text: '#11181C',
-    background: '#fff',
+    textSecondary: '#687076',
+    background: palette.white,
     tint: tintColorLight,
     icon: '#687076',
     tabIconDefault: '#687076',
     tabIconSelected: tintColorLight,
+    
+    // UI Elements
+    cardBackground: palette.blue50,
+    cardBorder: palette.blue500,
+    surface: palette.gray100, // For action buttons
+    success: palette.green500,
+    border: '#eee',
   },
   dark: {
     text: '#ECEDEE',
-    background: '#151718',
+    textSecondary: '#9BA1A6',
+    background: palette.gray900,
     tint: tintColorDark,
     icon: '#9BA1A6',
     tabIconDefault: '#9BA1A6',
     tabIconSelected: tintColorDark,
+    
+    // UI Elements
+    cardBackground: palette.darkCard,
+    cardBorder: palette.white, // In dark mode, white border looks clean
+    surface: palette.darkSurface,
+    success: palette.green500,
+    border: '#333',
   },
 };
 
+// ... (Keep the Fonts export as is) ...
 export const Fonts = Platform.select({
   ios: {
-    /** iOS `UIFontDescriptorSystemDesignDefault` */
     sans: 'system-ui',
-    /** iOS `UIFontDescriptorSystemDesignSerif` */
     serif: 'ui-serif',
-    /** iOS `UIFontDescriptorSystemDesignRounded` */
     rounded: 'ui-rounded',
-    /** iOS `UIFontDescriptorSystemDesignMonospaced` */
     mono: 'ui-monospace',
   },
   default: {

@@ -1,98 +1,116 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { StyleSheet, TouchableOpacity, ScrollView, View } from 'react-native';
+import { useRouter } from 'expo-router';
 
 import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+import { IconSymbol } from '@/components/ui/icon-symbol';
+import { Colors } from '@/constants/theme';
+import { useColorScheme } from '@/hooks/use-color-scheme';
 
 export default function HomeScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+  const router = useRouter();
+  const colorScheme = useColorScheme() ?? 'light';
+  const theme = Colors[colorScheme]; // Access the theme object directly
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+  const recentActivity = [
+    { id: 1, title: 'Blood Panel', date: 'Oct 26', status: '2 Abnormalities', icon: 'doc.text.fill' },
+    { id: 2, title: 'Metformin Strip', date: 'Oct 24', status: 'Safe', icon: 'camera.viewfinder' },
+  ];
+
+  return (
+    <ThemedView style={styles.container}>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        
+        {/* 1. Header Section */}
+        <View style={styles.header}>
+          <View>
+            <ThemedText type="title">Hello, Priya <HelloWave /></ThemedText>
+            <ThemedText style={styles.subtitle}>
+              Health Status: <ThemedText type="defaultSemiBold" style={{ color: theme.success }}>Stable</ThemedText>
+            </ThemedText>
+          </View>
+          <TouchableOpacity style={styles.profileButton} onPress={() => router.push('/profile')}>
+            <View style={[styles.avatar, { backgroundColor: theme.tint }]} />
+          </TouchableOpacity>
+        </View>
+
+        {/* 2. Daily Insight Card */}
+        <View style={[styles.card, { backgroundColor: theme.cardBackground, borderColor: theme.tint }]}>
+          <View style={styles.cardHeader}>
+            <IconSymbol name="sparkles" size={20} color={theme.tint} />
+            <ThemedText type="defaultSemiBold" style={{ color: theme.tint, marginLeft: 8 }}>Daily Insight</ThemedText>
+          </View>
+          <ThemedText style={styles.cardBody}>
+            Your Iron levels were low in the last report. Consider adding spinach or lentils to your lunch today! 🥗
+          </ThemedText>
+        </View>
+
+        {/* 3. Quick Actions */}
+        <ThemedText type="subtitle" style={styles.sectionTitle}>Quick Actions</ThemedText>
+        <View style={styles.actionRow}>
+          <TouchableOpacity 
+            style={[styles.actionCard, { backgroundColor: theme.surface }]}
+            onPress={() => console.log('Open Document Picker')} 
+          >
+            <IconSymbol name="doc.text.fill" size={32} color={theme.tint} />
+            <ThemedText type="defaultSemiBold" style={styles.actionText}>Upload Report</ThemedText>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={[styles.actionCard, { backgroundColor: theme.surface }]}
+            onPress={() => router.push('/scan')}
+          >
+            <IconSymbol name="camera.viewfinder" size={32} color={theme.tint} />
+            <ThemedText type="defaultSemiBold" style={styles.actionText}>Check Meds</ThemedText>
+          </TouchableOpacity>
+        </View>
+
+        {/* 4. Recent Activity */}
+        <View style={styles.sectionHeader}>
+          <ThemedText type="subtitle">Recent Activity</ThemedText>
+          <TouchableOpacity onPress={() => router.push('/reports')}>
+            <ThemedText type="link">See All</ThemedText>
+          </TouchableOpacity>
+        </View>
+
+        {recentActivity.map((item) => (
+          <TouchableOpacity key={item.id} style={[styles.listCard, { borderBottomColor: theme.border }]}>
+            <View style={[styles.iconBox, { backgroundColor: theme.tint + '20' }]}> 
+              <IconSymbol name={item.icon as any} size={24} color={theme.tint} />
+            </View>
+            <View style={styles.listContent}>
+              <ThemedText type="defaultSemiBold">{item.title}</ThemedText>
+              <ThemedText style={[styles.listSubtext, { color: theme.textSecondary }]}>
+                {item.date} • {item.status}
+              </ThemedText>
+            </View>
+            <IconSymbol name="chevron.right" size={20} color={theme.icon} />
+          </TouchableOpacity>
+        ))}
+
+      </ScrollView>
+    </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
-  },
+  container: { flex: 1 },
+  scrollContent: { padding: 20, paddingTop: 60 },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 },
+  subtitle: { marginTop: 4, opacity: 0.7 },
+  profileButton: { padding: 4 },
+  avatar: { width: 40, height: 40, borderRadius: 20 },
+  card: { padding: 16, borderRadius: 16, marginBottom: 32, borderWidth: 1, borderColor: 'transparent' },
+  cardHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
+  cardBody: { fontSize: 15, lineHeight: 22 },
+  sectionTitle: { marginBottom: 16 },
+  actionRow: { flexDirection: 'row', gap: 16, marginBottom: 32 },
+  actionCard: { flex: 1, padding: 20, borderRadius: 16, alignItems: 'center', justifyContent: 'center', gap: 12 },
+  actionText: { textAlign: 'center' },
+  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
+  listCard: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, borderBottomWidth: 1 },
+  iconBox: { width: 48, height: 48, borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginRight: 16 },
+  listContent: { flex: 1 },
+  listSubtext: { fontSize: 13, marginTop: 2 },
 });
