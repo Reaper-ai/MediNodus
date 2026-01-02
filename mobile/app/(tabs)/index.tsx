@@ -23,6 +23,7 @@ export default function HomeScreen() {
       const result = await DocumentPicker.getDocumentAsync({ //
         type: ['image/*', 'application/pdf'],
         copyToCacheDirectory: true,
+        multiple: true
       });
 
       if (!result.canceled && result.assets?.[0]) {
