@@ -236,11 +236,11 @@ const styles = StyleSheet.create({
 
   // Review Modal Styles
   reviewContainer: { flex: 1 },
-  reviewHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 20, borderBottomWidth: 1, borderBottomColor: '#eee' },
+  reviewHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 20, borderBottomWidth: 1, borderBottomColor: '#333' },
   headerTitle: { fontSize: 18, fontWeight: 'bold' },
   reviewList: { padding: 20, gap: 30 },
   reviewItem: { marginBottom: 30, alignItems: 'center' },
-  reviewImage: { width: '100%', height: 400, borderRadius: 12, backgroundColor: '#f0f0f0' },
+  reviewImage: { width: '100%', height: 400, borderRadius: 12, backgroundColor: '#333' },
   reviewActions: { flexDirection: 'row', marginTop: 12, gap: 16, width: '100%', justifyContent: 'center' },
-  actionBtn: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 20, backgroundColor: '#f0f0f0' },
+  actionBtn: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 20, backgroundColor: '#333' },
 });

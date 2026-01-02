@@ -1,66 +1,42 @@
-/**
- * mobile/constants/theme.ts
- */
 import { Platform } from 'react-native';
 
-// 1. Define your primitive color palette here
 const palette = {
   white: '#FFFFFF',
   black: '#000000',
-  // Grays
-  gray100: '#F5F5F5',
-  gray200: '#E5E7EB',
+  gray50: '#F9FAFB',
+  gray100: '#F3F4F6',
   gray800: '#1F2937',
   gray900: '#151718',
-  // Brand Colors
-  blue50: '#F0F9FF',
   blue500: '#0a7ea4',
-  // Functional Colors
-  green500: '#4ADE80',
-  red500: '#EF4444',
-  darkSurface: '#2C2C2E',
-  darkCard: '#1E1E1E',
+  red600: '#DC2626',
 };
-
-const tintColorLight = palette.blue500;
-const tintColorDark = palette.white;
 
 export const Colors = {
   light: {
     text: '#11181C',
-    textSecondary: '#687076',
+    textSecondary: '#6B7280',
     background: palette.white,
-    tint: tintColorLight,
+    tint: palette.blue500,
     icon: '#687076',
-    tabIconDefault: '#687076',
-    tabIconSelected: tintColorLight,
+    surface: palette.gray100,
+    cardBackground: palette.gray50,
+    border: '#E5E7EB',
+    danger: palette.red600,
     
-    // UI Elements
-    cardBackground: palette.blue50,
-    cardBorder: palette.blue500,
-    surface: palette.gray100, // For action buttons
-    success: palette.green500,
-    border: '#eee',
   },
   dark: {
     text: '#ECEDEE',
-    textSecondary: '#9BA1A6',
+    textSecondary: '#9CA3AF',
     background: palette.gray900,
-    tint: tintColorDark,
+    tint: palette.white,
     icon: '#9BA1A6',
-    tabIconDefault: '#9BA1A6',
-    tabIconSelected: tintColorDark,
-    
-    // UI Elements
-    cardBackground: palette.darkCard,
-    cardBorder: palette.white, // In dark mode, white border looks clean
-    surface: palette.darkSurface,
-    success: palette.green500,
-    border: '#333',
+    surface: '#262829',
+    cardBackground: '#1E2021',
+    border: '#374151',
+    danger: '#EF4444',
   },
 };
 
-// ... (Keep the Fonts export as is) ...
 export const Fonts = Platform.select({
   ios: {
     sans: 'system-ui',

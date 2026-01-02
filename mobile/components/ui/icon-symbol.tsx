@@ -21,6 +21,14 @@ const MAPPING = {
   'person.fill': 'person',             // For Profile
   'sparkles': 'auto-awesome',
   'list.bullet.rectangle.portrait.fill': 'history', // Material Icon equivalent
+  'heart.text.square.fill': 'favorite', // or 'medical-services'
+  'arrow.right.circle.fill': 'logout',
+  'moon.fill': 'dark-mode',
+  'eye.fill': 'visibility',
+  'lock.fill': 'lock',
+  'cloud.fill': 'cloud',
+  'trash.fill': 'delete',
+  'bell.fill' : 'notifications'
 } as IconMapping; //
 
 export type IconSymbolName = keyof typeof MAPPING;

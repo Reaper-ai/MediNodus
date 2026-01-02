@@ -30,9 +30,9 @@ export default function TabLayout() {
           height: 60 + insets.bottom, 
           // Push internal content up by the inset amount
           paddingBottom: insets.bottom, 
-          backgroundColor: colorScheme === 'dark' ? '#151718' : '#ffffff',
+          backgroundColor: themeColors.background,
           ...Platform.select({
-            ios: { shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 10 },
+            ios: { shadowColor: "#333" , shadowOpacity: 0.1, shadowRadius: 10 },
             android: { elevation: 10 },
           }),
         },
