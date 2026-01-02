@@ -7,18 +7,20 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useGlobalState } from '@/context/GlobalStateContext';
+
 
 export default function MedicalInfoScreen() {
   const router = useRouter();
   const theme = Colors[useColorScheme() ?? 'light'];
 
-  // Medical State
-  const [conditions, setConditions] = useState("Hypertension, Type 2 Diabetes");
-  const [allergies, setAllergies] = useState("Penicillin, Peanuts");
-  const [medications, setMedications] = useState("Metformin 500mg (Daily)");
+  const { medicalInfo, updateMedicalInfo } = useGlobalState(); //
 
-  const handleUpdate = () => {
-    // This data should be sent to your backend and used in your RAG prompt context
+  // Initialize local form state from global context
+  const [form, setForm] = useState(medicalInfo);
+
+  const handleUpdate = async () => {
+    await updateMedicalInfo(form); //
     Alert.alert("Context Updated", "This info will now be used by MediNodus AI for your analysis.");
     router.back();
   };
@@ -36,8 +38,8 @@ export default function MedicalInfoScreen() {
             style={[styles.textArea, { backgroundColor: theme.cardBackground, color: theme.text, borderColor: theme.border }]}
             multiline
             numberOfLines={4}
-            value={conditions}
-            onChangeText={setConditions}
+            value={form.conditions}
+            onChangeText={(text) => setForm({ ...form, conditions: text })}
             placeholder="e.g., Asthma, Heart Disease..."
             placeholderTextColor={theme.icon}
           />
@@ -49,8 +51,8 @@ export default function MedicalInfoScreen() {
             style={[styles.textArea, { backgroundColor: theme.cardBackground, color: theme.text, borderColor: theme.border }]}
             multiline
             numberOfLines={3}
-            value={allergies}
-            onChangeText={setAllergies}
+            value={form.allergies}
+            onChangeText={(text) => setForm({ ...form, allergies: text })}
             placeholder="e.g., Pollen, Dairy, specific drugs..."
             placeholderTextColor={theme.icon}
           />
@@ -62,8 +64,8 @@ export default function MedicalInfoScreen() {
             style={[styles.textArea, { backgroundColor: theme.cardBackground, color: theme.text, borderColor: theme.border }]}
             multiline
             numberOfLines={3}
-            value={medications}
-            onChangeText={setMedications}
+            value={form.medications}
+            onChangeText={(text) => setForm({ ...form, medications: text })}
             placeholder="List any medicine you take regularly..."
             placeholderTextColor={theme.icon}
           />

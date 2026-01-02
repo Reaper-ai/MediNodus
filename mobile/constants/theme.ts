@@ -3,16 +3,24 @@ import { Platform } from 'react-native';
 export const Colors = {
   light: {
     text: '#0f1724',
-    background: '#F8FAFF', // very light, slightly cool off-white
-    tint: '#2563EB', // calming blue accent
-    icon: '#64748B', // muted slate for icons
-    surface: '#F1F5F9', // very soft surface
-    cardBackground: '#F9FBFF', // slightly distinct from background
-    border: '#E6EEF8',
+    background: '#FFFAFA', // very light, slightly cool off-white
+    tint: '#467ffa', // calming blue accent
+    icon: '#424D5C', // muted slate for icons
+    surface: '#F5F5F5', // very soft surface
+    cardBackground: '#e9ecef', // slightly distinct from background
+    border: '#a5a6a8',
     // Additional semantic colors used across the app
     success: '#10B981',
     danger: '#EF4444',
+    warning: '#F59E0B',
+    successBg: '#ECFDF5',
+    warningBg: '#FFFBEB',
+    dangerBg: '#FEF2F2',
     textSecondary: '#6B7280',
+
+
+
+
   },
   dark: {
     text: '#E6EEF8', // soft white (not pure)
@@ -25,6 +33,10 @@ export const Colors = {
     // Additional semantic colors used across the app
     success: '#34D399',
     danger: '#F87171',
+      warning: '#FBBF24',
+       successBg: '#064E3B',
+    warningBg: '#78350F',
+    dangerBg: '#7F1D1D',
     textSecondary: '#94A3B8',
   },
   // Added High Contrast Theme
@@ -39,6 +51,10 @@ export const Colors = {
     success: '#00FF00',
     danger: '#FF0000',
     textSecondary: '#FFFFFF',
+     warning: '#FFFF00',
+    successBg: '#000000',
+    warningBg: '#000000',
+    dangerBg: '#000000',
   },
 };
 
