@@ -1,29 +1,36 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { View, StyleSheet, TouchableOpacity, ScrollView, Modal, Alert, Dimensions, SafeAreaView, ActivityIndicator } from 'react-native';
+import { 
+  View, 
+  StyleSheet, 
+  TouchableOpacity, 
+  ScrollView, 
+  Modal, 
+  Alert, 
+  Dimensions, 
+  ActivityIndicator,
+  BackHandler 
+} from 'react-native';
+
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { CameraView, useCameraPermissions } from 'expo-camera';
+import { CameraView, useCameraPermissions, FlashMode } from 'expo-camera';
 import { ImageEditor } from 'expo-dynamic-image-crop';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Image } from 'expo-image';
+
+// Themed Components (assuming these paths are correct in your project)
 import { ThemedText } from '../components/themed-text';
 import { ThemedView } from '../components/themed-view';
 import { Colors } from '../constants/theme';
-import { useColorScheme } from '../hooks/use-color-scheme';
 import { useThemeColor } from '../hooks/use-theme-color';
 import { IconSymbol } from '../components/ui/icon-symbol';
 
-const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 interface CapturedImage {
   id: string;
   uri: string;
   timestamp: number;
-}
-
-interface CropResult {
-  uri: string;
 }
 
 export default function ScanScreen() {
@@ -32,138 +39,238 @@ export default function ScanScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
 
+  // States
   const [capturedImages, setCapturedImages] = useState<CapturedImage[]>([]);
   const [isReviewing, setIsReviewing] = useState(false);
   const [isCropping, setIsCropping] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
-  const [tempUri, setTempUri] = useState<string | null>(null);
+  const [flash, setFlash] = useState<FlashMode>('off');
   const [isLoading, setIsLoading] = useState(false);
-  const [cameraFacing, setCameraFacing] = useState<'front' | 'back'>('back');
 
+  // Theme Colors
   const backgroundColor = useThemeColor({ light: Colors.light.background, dark: Colors.dark.background }, 'background');
   const tintColor = useThemeColor({ light: Colors.light.tint, dark: Colors.dark.tint }, 'tint');
   const textColor = useThemeColor({ light: Colors.light.text, dark: Colors.dark.text }, 'text');
   const surfaceColor = useThemeColor({ light: Colors.light.surface, dark: Colors.dark.surface }, 'surface');
-  const cardBackgroundColor = useThemeColor({ light: Colors.light.cardBackground, dark: Colors.dark.cardBackground }, 'cardBackground');
   const dangerColor = useThemeColor({ light: Colors.light.danger, dark: Colors.dark.danger }, 'danger');
   const successColor = useThemeColor({ light: Colors.light.success, dark: Colors.dark.success }, 'success');
 
+  // Handle Android Hardware Back Button
   useEffect(() => {
-    if (!permission?.granted) {
-      requestPermission();
-    }
-  }, [permission?.granted, requestPermission]);
+    const backAction = () => {
+      if (isReviewing) {
+        setIsReviewing(false);
+        return true;
+      }
+      router.back();
+      return true;
+    };
 
-  if (!permission) {
-    return <ThemedView style={styles.container}><ActivityIndicator size="large" color={tintColor} /></ThemedView>;
+    const backHandler = BackHandler.addEventListener('hardwareBackPress', backAction);
+    return () => backHandler.remove();
+  }, [isReviewing]);
+
+  useEffect(() => {
+    if (!permission?.granted) requestPermission();
+  }, [permission]);
+
+  if (!permission?.granted) {
+    return (
+      <ThemedView style={styles.centered}>
+        <ThemedText style={styles.permissionText}>Camera permission is required to scan.</ThemedText>
+        <TouchableOpacity style={[styles.primaryButton, { backgroundColor: tintColor }]} onPress={requestPermission}>
+          <ThemedText style={{ color: '#fff' }}>Grant Permission</ThemedText>
+        </TouchableOpacity>
+      </ThemedView>
+    );
   }
 
-  if (!permission.granted) {
-    return <ThemedView style={styles.container}><ThemedText style={styles.permissionText}>Camera permission required</ThemedText><TouchableOpacity style={[styles.button, { backgroundColor: tintColor }]} onPress={requestPermission}><ThemedText style={styles.buttonText}>Grant Permission</ThemedText></TouchableOpacity></ThemedView>;
-  }
+  // --- Handlers ---
 
   const handleCapture = async () => {
+    if (!cameraRef.current) return;
     try {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-      if (!cameraRef.current) { Alert.alert('Error', 'Camera ref not available'); return; }
-      const photo = await cameraRef.current.takePictureAsync({ quality: 0.85, skipProcessing: false });
-      if (photo?.uri) {
-        setCapturedImages([...capturedImages, { id: `img_${Date.now()}`, uri: photo.uri, timestamp: Date.now() }]);
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      const photo = await cameraRef.current.takePictureAsync({ quality: 0.8 });
+      if (photo) {
+        setCapturedImages(prev => [...prev, { id: Date.now().toString(), uri: photo.uri, timestamp: Date.now() }]);
       }
-    } catch (error) {
-      console.error('Capture error:', error);
-      Alert.alert('Capture Error', 'Failed to capture photo');
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+    } catch (e) {
+      Alert.alert("Error", "Failed to take photo");
     }
   };
 
-  const handleDeleteImage = (id: string) => {
-    Alert.alert('Delete Photo', 'Remove this photo?', [
-      { text: 'Cancel' },
-      { text: 'Delete', onPress: () => { setCapturedImages(capturedImages.filter(img => img.id !== id)); Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); }, style: 'destructive' },
-    ]);
+  const toggleFlash = () => {
+    setFlash(current => (current === 'off' ? 'on' : 'off'));
+    console.log("toggle")
+    Haptics.selectionAsync();
   };
 
-  const handleStartCrop = (index: number, uri: string) => {
+  const handleStartCrop = (index: number) => {
     setEditingIndex(index);
-    setTempUri(uri);
     setIsCropping(true);
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   };
 
-  const handleCropSuccess = (croppedUri: string) => {
+  const onCropDone = (uri: string) => {
     if (editingIndex !== null) {
       const updated = [...capturedImages];
-      updated[editingIndex] = { ...updated[editingIndex], uri: croppedUri };
+      updated[editingIndex].uri = uri;
       setCapturedImages(updated);
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     }
     setIsCropping(false);
     setEditingIndex(null);
-    setTempUri(null);
   };
 
   const handleSubmit = async () => {
-    if (capturedImages.length === 0) {
-      Alert.alert('No Photos', 'Capture at least one photo');
-      return;
-    }
+    setIsLoading(true);
     try {
-      setIsLoading(true);
-      const batch = { id: `batch_${Date.now()}`, images: capturedImages, createdAt: new Date().toISOString() };
-      await AsyncStorage.setItem('currentImageBatch', JSON.stringify(batch));
-      router.push({ pathname: '/reports/analysis', params: { batchId: batch.id, imageCount: capturedImages.length.toString() } });
-    } catch (error) {
-      Alert.alert('Submit Error', 'Failed to save photos');
+      await AsyncStorage.setItem('scanned_images', JSON.stringify(capturedImages));
+      router.push('/reports/analysis');
+    } catch (e) {
+      Alert.alert("Error", "Save failed");
     } finally {
       setIsLoading(false);
     }
   };
 
+  // --- UI Components ---
+
+  // 1. Camera View
   if (!isReviewing) {
-    return <ThemedView style={[styles.container, { backgroundColor }]}><CameraView ref={cameraRef} style={styles.camera} facing={cameraFacing} /><View style={[styles.absoluteOverlay, { paddingTop: insets.top, paddingBottom: insets.bottom + 20 }]}><View style={styles.topBar}><TouchableOpacity style={[styles.iconButton, { backgroundColor: `${surfaceColor}99` }]} onPress={() => setCameraFacing(cameraFacing === 'back' ? 'front' : 'back')}><IconSymbol name="camera.rotate" size={20} color={tintColor} /></TouchableOpacity><TouchableOpacity style={[styles.iconButton, { backgroundColor: `${surfaceColor}99` }]} onPress={() => router.back()}><IconSymbol name="xmark" size={20} color={textColor} /></TouchableOpacity></View><View style={[styles.focusFrame, { borderColor: tintColor }]}><View style={[styles.corner, styles.topLeft, { borderTopColor: tintColor, borderLeftColor: tintColor }]} /><View style={[styles.corner, styles.topRight, { borderTopColor: tintColor, borderRightColor: tintColor }]} /><View style={[styles.corner, styles.bottomLeft, { borderBottomColor: tintColor, borderLeftColor: tintColor }]} /><View style={[styles.corner, styles.bottomRight, { borderBottomColor: tintColor, borderRightColor: tintColor }]} /></View><View style={styles.bottomBar}><View style={[styles.counterBadge, { backgroundColor: tintColor }]}><ThemedText style={styles.counterText}>{capturedImages.length}</ThemedText></View><TouchableOpacity style={[styles.captureButton, { backgroundColor: tintColor }]} onPress={handleCapture} activeOpacity={0.7}><View style={styles.captureInner} /></TouchableOpacity><TouchableOpacity style={[styles.doneButton, { backgroundColor: successColor }]} onPress={() => { if (capturedImages.length === 0) { Alert.alert('No Photos'); return; } setIsReviewing(true); }}><IconSymbol name="checkmark" size={20} color="#fff" /></TouchableOpacity></View>{capturedImages.length > 0 && <TouchableOpacity style={[styles.thumbnailButton, { backgroundColor: `${cardBackgroundColor}dd` }]} onPress={() => setIsReviewing(true)}><Image source={{ uri: capturedImages[capturedImages.length - 1].uri }} style={styles.thumbnail} /><View style={[styles.photoIconOverlay, { backgroundColor: `${tintColor}aa` }]}><IconSymbol name="photo" size={12} color="#fff" /></View></TouchableOpacity>}</View></ThemedView>;
+    return (
+      <View style={[styles.container, { backgroundColor: '#000' }]}>
+        <CameraView 
+          ref={cameraRef} 
+          style={StyleSheet.absoluteFill} 
+          flash={flash}
+          facing="back" 
+        />
+        
+        {/* Top Controls */}
+        <View style={[styles.overlayTop, { paddingTop: insets.top + 10 }]}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.roundBtn}>
+            <IconSymbol name='chevron.left' size={24} color="#fff" />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={toggleFlash} style={styles.roundBtn}>
+            <IconSymbol name={flash === 'on' ? 'flash' : 'flash_off'} size={24} color={flash === 'on' ? "#FFD700" : "#fff"} />
+          </TouchableOpacity>
+        </View>
+
+        {/* Bottom Controls */}
+        <View style={[styles.overlayBottom, { paddingBottom: insets.bottom + 20 }]}>
+          {/* Gallery Preview */}
+          <TouchableOpacity 
+            style={styles.previewThumbnail} 
+            onPress={() => capturedImages.length > 0 && setIsReviewing(true)}
+          >
+            {capturedImages.length > 0 ? (
+              <Image source={{ uri: capturedImages[capturedImages.length - 1].uri }} style={styles.full} />
+            ) : (
+              <View style={[styles.full, { backgroundColor: 'rgba(255,255,255,0.2)' }]} />
+            )}
+            {capturedImages.length > 0 && (
+              <View style={styles.badge}><ThemedText style={styles.badgeText}>{capturedImages.length}</ThemedText></View>
+            )}
+          </TouchableOpacity>
+
+          {/* Capture Button */}
+          <TouchableOpacity onPress={handleCapture} style={styles.captureBtn}>
+            <View style={styles.captureInternal} />
+          </TouchableOpacity>
+
+          {/* Proceed Button */}
+          <TouchableOpacity 
+            style={[styles.doneBtn, { opacity: capturedImages.length > 0 ? 1 : 0.5 }]} 
+            onPress={() => capturedImages.length > 0 && setIsReviewing(true)}
+          >
+            <IconSymbol name="checkmark" size={28} color="#fff" />
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
   }
 
-  return <ThemedView style={[styles.container, { backgroundColor }]}><SafeAreaView style={[styles.reviewHeader, { backgroundColor: cardBackgroundColor }]}><TouchableOpacity onPress={() => setIsReviewing(false)}><IconSymbol name="arrow.left" size={20} color={tintColor} /></TouchableOpacity><ThemedText style={styles.reviewTitle}>Review ({capturedImages.length})</ThemedText><View style={{ width: 20 }} /></SafeAreaView><ScrollView style={styles.reviewScroll} contentContainerStyle={styles.reviewContent}>{capturedImages.map((image, index) => <View key={image.id} style={[styles.imageCard, { backgroundColor: cardBackgroundColor }]}><Image source={{ uri: image.uri }} style={styles.reviewImage} /><View style={[styles.imageIndexBadge, { backgroundColor: `${tintColor}dd` }]}><ThemedText style={styles.indexText}>{index + 1}</ThemedText></View><View style={styles.imageActions}><TouchableOpacity style={[styles.actionButton, { backgroundColor: `${dangerColor}cc` }]} onPress={() => handleDeleteImage(image.id)}><IconSymbol name="trash" size={16} color="#fff" /><ThemedText style={styles.actionButtonText}>Delete</ThemedText></TouchableOpacity><TouchableOpacity style={[styles.actionButton, { backgroundColor: `${tintColor}cc` }]} onPress={() => handleStartCrop(index, image.uri)}><IconSymbol name="crop" size={16} color="#fff" /><ThemedText style={styles.actionButtonText}>Crop</ThemedText></TouchableOpacity></View></View>)}</ScrollView><SafeAreaView style={[styles.reviewFooter, { backgroundColor: cardBackgroundColor }]}><TouchableOpacity style={[styles.footerButton, { backgroundColor: dangerColor }]} onPress={() => setIsReviewing(false)}><ThemedText style={styles.footerButtonText}>Back</ThemedText></TouchableOpacity><TouchableOpacity style={[styles.footerButton, { backgroundColor: successColor }]} onPress={handleSubmit} disabled={isLoading}>{isLoading ? <ActivityIndicator color="#fff" /> : <ThemedText style={styles.footerButtonText}>Submit ({capturedImages.length})</ThemedText>}</TouchableOpacity></SafeAreaView>{isCropping && tempUri && <Modal visible={isCropping} animationType="fade"><ImageEditor imageUri={tempUri} onEditingComplete={(result: CropResult) => { if (result?.uri) handleCropSuccess(result.uri); }} onEditingCancel={() => { setIsCropping(false); setEditingIndex(null); setTempUri(null); }} /></Modal>}</ThemedView>;
+  // 2. Review View
+  return (
+    <ThemedView style={[styles.container, { paddingTop: insets.top }]}>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => setIsReviewing(false)}>
+          <IconSymbol name="camera" size={24} color={tintColor} />
+        </TouchableOpacity>
+        <ThemedText style={styles.headerTitle}>Review Scans</ThemedText>
+        <View style={{ width: 24 }} />
+      </View>
+
+      <ScrollView contentContainerStyle={styles.scrollList}>
+        {capturedImages.map((img, idx) => (
+          <View key={img.id} style={[styles.card, { backgroundColor: surfaceColor }]}>
+            <Image source={{ uri: img.uri }} style={styles.cardImg} contentFit="cover" />
+            <View style={styles.cardActions}>
+              <TouchableOpacity style={styles.actionBtn} onPress={() => handleStartCrop(idx)}>
+                <IconSymbol name="crop" size={18} color={tintColor} />
+                <ThemedText style={{ color: tintColor, marginLeft: 5 }}>Crop</ThemedText>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={styles.actionBtn} 
+                onPress={() => setCapturedImages(prev => prev.filter(i => i.id !== img.id))}
+              >
+                <IconSymbol name="trash" size={18} color={dangerColor} />
+                <ThemedText style={{ color: dangerColor, marginLeft: 5 }}>Delete</ThemedText>
+              </TouchableOpacity>
+            </View>
+          </View>
+        ))}
+      </ScrollView>
+
+      <View style={[styles.footer, { paddingBottom: insets.bottom + 10 }]}>
+        <TouchableOpacity 
+          style={[styles.submitBtn, { backgroundColor: successColor }]} 
+          onPress={handleSubmit}
+          disabled={isLoading}
+        >
+          {isLoading ? <ActivityIndicator color="#fff" /> : <ThemedText style={styles.submitText}>Submit {capturedImages.length} Photos</ThemedText>}
+        </TouchableOpacity>
+      </View>
+
+      {/* Crop Modal */}
+      {isCropping && editingIndex !== null && (
+        <Modal visible={isCropping} transparent={false} animationType="slide">
+          <ImageEditor
+            imageUri={capturedImages[editingIndex].uri}
+            onEditingComplete={(res) => onCropDone(res.uri)}
+            onEditingCancel={() => setIsCropping(false)}
+          />
+        </Modal>
+      )}
+    </ThemedView>
+  );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  camera: { flex: 1 },
-  absoluteOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'space-between', pointerEvents: 'box-none' },
-  topBar: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12, pointerEvents: 'auto' },
-  iconButton: { width: 44, height: 44, borderRadius: 22, justifyContent: 'center', alignItems: 'center' },
-  focusFrame: { position: 'absolute', top: '15%', left: '10%', right: '10%', height: screenHeight * 0.5, borderWidth: 2, borderRadius: 20, pointerEvents: 'none' },
-  corner: { position: 'absolute', width: 30, height: 30, borderWidth: 3 },
-  topLeft: { top: 2, left: 2 },
-  topRight: { top: 2, right: 2 },
-  bottomLeft: { bottom: 2, left: 2 },
-  bottomRight: { bottom: 2, right: 2 },
-  bottomBar: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 16, pointerEvents: 'auto', gap: 16 },
-  counterBadge: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20, minWidth: 40, justifyContent: 'center', alignItems: 'center' },
-  counterText: { fontWeight: '600', fontSize: 14, color: '#fff' },
-  captureButton: { width: 70, height: 70, borderRadius: 35, justifyContent: 'center', alignItems: 'center', borderWidth: 4, borderColor: 'rgba(255,255,255,0.3)' },
-  captureInner: { width: 56, height: 56, borderRadius: 28, backgroundColor: 'rgba(255,255,255,0.9)' },
-  doneButton: { paddingHorizontal: 16, paddingVertical: 12, borderRadius: 8, justifyContent: 'center', alignItems: 'center' },
-  thumbnailButton: { position: 'absolute', bottom: 100, left: 16, width: 70, height: 70, borderRadius: 8, overflow: 'hidden', borderWidth: 2, borderColor: 'rgba(255,255,255,0.5)' },
-  thumbnail: { width: '100%', height: '100%' },
-  photoIconOverlay: { position: 'absolute', bottom: 4, right: 4, width: 24, height: 24, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
-  reviewHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: 'rgba(0,0,0,0.1)' },
-  reviewTitle: { fontSize: 18, fontWeight: '600' },
-  reviewScroll: { flex: 1 },
-  reviewContent: { paddingHorizontal: 16, paddingVertical: 12, gap: 12 },
-  imageCard: { borderRadius: 12, overflow: 'hidden', marginBottom: 8 },
-  reviewImage: { width: '100%', height: 200 },
-  imageIndexBadge: { position: 'absolute', top: 8, right: 8, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 16 },
-  indexText: { color: '#fff', fontWeight: '600', fontSize: 12 },
-  imageActions: { flexDirection: 'row', gap: 8, padding: 12 },
-  actionButton: { flex: 1, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', paddingVertical: 10, borderRadius: 8, gap: 6 },
-  actionButtonText: { color: '#fff', fontWeight: '500', fontSize: 12 },
-  reviewFooter: { flexDirection: 'row', gap: 12, paddingHorizontal: 16, paddingVertical: 12, borderTopWidth: 1, borderTopColor: 'rgba(0,0,0,0.1)' },
-  footerButton: { flex: 1, paddingVertical: 12, borderRadius: 8, justifyContent: 'center', alignItems: 'center' },
-  footerButtonText: { color: '#fff', fontWeight: '600', fontSize: 14 },
-  permissionText: { marginBottom: 20, textAlign: 'center', paddingHorizontal: 20 },
-  button: { paddingHorizontal: 24, paddingVertical: 12, borderRadius: 8 },
-  buttonText: { color: '#fff', fontWeight: '600' },
+  centered: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
+  full: { width: '100%', height: '100%' },
+  // Camera UI
+  overlayTop: { position: 'absolute', top: 0, left: 0, right: 0, flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 20 },
+  overlayBottom: { position: 'absolute', bottom: 0, left: 0, right: 0, flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center' },
+  roundBtn: { width: 45, height: 45, borderRadius: 25, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' },
+  captureBtn: { width: 80, height: 80, borderRadius: 40, borderWidth: 4, borderColor: '#fff', justifyContent: 'center', alignItems: 'center' },
+  captureInternal: { width: 65, height: 65, borderRadius: 35, backgroundColor: '#fff' },
+  previewThumbnail: { width: 60, height: 60, borderRadius: 10, overflow: 'hidden', borderWidth: 2, borderColor: '#fff' },
+  badge: { position: 'absolute', top: -5, right: -5, backgroundColor: 'red', borderRadius: 10, width: 20, height: 20, justifyContent: 'center', alignItems: 'center' },
+  badgeText: { color: '#fff', fontSize: 10, fontWeight: 'bold' },
+  doneBtn: { width: 60, height: 60, borderRadius: 30, backgroundColor: '#4CAF50', justifyContent: 'center', alignItems: 'center' },
+  // Review UI
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16 },
+  headerTitle: { fontSize: 18, fontWeight: 'bold' },
+  scrollList: { padding: 16 },
+  card: { marginBottom: 20, borderRadius: 15, overflow: 'hidden', elevation: 3, shadowOpacity: 0.1 },
+  cardImg: { width: '100%', height: 250 },
+  cardActions: { flexDirection: 'row', borderTopWidth: 1, borderTopColor: 'rgba(0,0,0,0.05)' },
+  actionBtn: { flex: 1, flexDirection: 'row', padding: 12, justifyContent: 'center', alignItems: 'center' },
+  footer: { padding: 16 },
+  submitBtn: { padding: 16, borderRadius: 12, alignItems: 'center' },
+  submitText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
+  permissionText: { textAlign: 'center', marginBottom: 20 },
+  primaryButton: { paddingHorizontal: 20, paddingVertical: 10, borderRadius: 8 }
 });
