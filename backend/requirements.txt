@@ -11,3 +11,6 @@ langchain-google-genai  # Google Gemini wrapper
 opencv-python-headless  # Computer Vision (Server version)
 paddlepaddle            # OCR (Warning: Large install)
 paddleocr               # OCR wrapper
+python-multipart        # For handling multipart/form-data (file uploads)
+python-dotenv           # For loading environment variables from .env files
+langchain_community
