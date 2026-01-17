@@ -3,8 +3,9 @@ from contextlib import asynccontextmanager
 from motor.motor_asyncio import AsyncIOMotorClient
 from beanie import init_beanie
 
-from core.config import settings
-from models.report import MedicalReport
+from .core.config import settings
+from .models.report import MedicalReport
+from .api.v1.router import api_router
 # Import User model here later
 
 @asynccontextmanager
@@ -24,6 +25,9 @@ app = FastAPI(
     title=settings.PROJECT_NAME,
     lifespan=lifespan
 )
+
+# Include API routes
+app.include_router(api_router)
 
 @app.get("/")
 async def root():
