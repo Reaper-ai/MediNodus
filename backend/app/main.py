@@ -2,10 +2,10 @@ from fastapi import FastAPI
 from contextlib import asynccontextmanager
 from motor.motor_asyncio import AsyncIOMotorClient
 from beanie import init_beanie
+from app.api.v1.router import api_router
 
-from .core.config import settings
-from .models.report import MedicalReport
-from .api.v1.router import api_router
+from app.core.config import settings
+from app.models.user import User
 # Import User model here later
 
 @asynccontextmanager
@@ -15,7 +15,7 @@ async def lifespan(app: FastAPI):
     database = client.medinodus_db
     
     # Initialize Beanie with your models
-    await init_beanie(database=database, document_models=[MedicalReport])
+    await init_beanie(database=database, document_models=[User])
     
     print(" Connected to MongoDB Atlas")
     yield
@@ -26,7 +26,6 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# Include API routes
 app.include_router(api_router)
 
 @app.get("/")
