@@ -31,3 +31,39 @@ app.include_router(api_router)
 @app.get("/")
 async def root():
     return {"message": "MediNodus Backend is Online 🩺"}
+
+
+
+
+"""
+login yahse se laga,
+
+-> update medicalhistory -> text entry of user history -> allergy, current medication, chronic condition 
+
+
+-> get medicalhisytou -> return above info
+
+
+-> post analyseMEDImage ->  image -> store in image db,
+                            stor its refence in mongodb
+                            { image : ref, date: date, type: med| report, respone : ai respone}
+                            < ai stuff return name of info  use plraceholder>
+                            use openfda to get info of med 
+                            pass the info to lmm service,
+                            get medical history
+                            save respone to  mongo db DB
+
+-> psote analyseReportimage -> image -> store image i image -> store in image db,
+                            stor its refence in mongodb
+                            { image : ref, date: date, type: med| report, respone : ai respone}
+                            pass the info to lmm service,
+                            save respone to  mongo db DB
+
+-> post alanlyseRpopertPDF -> image -> store image i image -> store in image db,
+                            stor its refence in mongodb
+                            { image : pdf icon, date: date, type: med| report, respone : ai respone}
+                            pass the info to lmm service,
+                            save respone to  mongo db D
+-> get hystoty -> jo upar record save kiye un sabo return kar de list mein
+
+"""
