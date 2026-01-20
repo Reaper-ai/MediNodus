@@ -3,12 +3,12 @@ import { Platform } from 'react-native';
 
 // CHANGE THIS to your backend URL
 const API_URL = __DEV__ 
-  ? (Platform.OS === 'android' ? 'http://10.0.2.2:8000' : 'http://localhost:8000') 
+  ? (Platform.OS === 'android' ? 'http://10.0.2.2:8000' : 'http:/10.76.77.212:8000') 
   : 'https://your-production-url.com';
 
 export const authService = {
   async register(email: string, password: string, fullName: string) {
-    const response = await fetch(`${API_URL}/api/v1/auth/register`, {
+    const response = await fetch(`${API_URL}/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password, full_name: fullName }),
@@ -22,7 +22,7 @@ export const authService = {
   },
 
   async login(email: string, password: string) {
-    const response = await fetch(`${API_URL}/api/v1/auth/login`, {
+    const response = await fetch(`${API_URL}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password }),

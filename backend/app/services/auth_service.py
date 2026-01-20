@@ -21,5 +21,5 @@ class AuthService:
     @staticmethod
     def create_access_token(data: dict):
         to_encode = data.copy()
-        to_encode["exp"] = datetime.utcnow() + timedelta(hours=12)
+        to_encode["exp"] = datetime.now(datetime.timezone.utc) + timedelta(hours=12)
         return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGO)
