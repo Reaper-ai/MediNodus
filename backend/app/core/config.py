@@ -6,6 +6,7 @@ class Settings(BaseSettings):
     MONGO_URL: str 
     SECRET_KEY: str
     MONGO_NAME :str= "main"
+    CLOUDINARY_KEY:str
     # ALGORITHM: str = "HS256"
     # GOOGLE_API_KEY: str = "your_google_api_key_here"
 

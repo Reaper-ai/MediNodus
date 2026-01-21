@@ -19,7 +19,7 @@ bnb_config = BitsAndBytesConfig(
 model = AutoModelForImageTextToText.from_pretrained(
     MODEL_ID,
     quantization_config=bnb_config,
-    device_map="gpu"  # GPU first, CPU offload if needed
+    device_map="auto"  # GPU first, CPU offload if needed
 )
 
 processor = AutoProcessor.from_pretrained(MODEL_ID, use_fast=True)

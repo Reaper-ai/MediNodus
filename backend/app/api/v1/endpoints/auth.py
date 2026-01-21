@@ -3,9 +3,9 @@ from app.models.user import User
 from app.schemas.auth_schema import UserRegister, UserLogin, TokenResponse
 from app.services.auth_service import AuthService
 
+from fastapi.security import OAuth2PasswordRequestForm
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
-
 
 @router.post("/register")
 async def register(data: UserRegister):
@@ -45,6 +45,22 @@ async def login(data: UserLogin):  # <--- CHANGED: Use Pydantic Model (JSON)
     })
 
     return TokenResponse(access_token=token)
+
+@router.post("/swagger/login")
+async def swagger_login(
+    form_data: OAuth2PasswordRequestForm = Depends()
+):
+    user = await User.find_one(User.email == form_data.username)
+
+    if not user or not AuthService.verify_password(
+        form_data.password,
+        user.hashed_password
+    ):
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+
+    token = AuthService.create_access_token({"sub": str(user.id)})
+
+    return {"access_token": token, "token_type": "bearer"}
 
 @router.post("/logout")
 async def logout():

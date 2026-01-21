@@ -15,7 +15,7 @@ SECRET_KEY = settings.SECRET_KEY
 ALGO = "HS256"
 
 # This tells FastAPI to read: Authorization: Bearer <token>
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/swagger/login")#THIS IS TEMPORARY , PLS CHANGE BACK TOKEN URL TO /auth/login after testing
 
 
 class AuthService:
