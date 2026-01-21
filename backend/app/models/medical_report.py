@@ -6,8 +6,8 @@ from app.models.medical_history_entry import MedicalHistoryEntry
 class MedicalReport(Document):
     user_id: str
     email: str
-    allergy: Optional[str] = None
-    current_medication: Optional[str] = None
+    allergy: Optional[List[str]] = None
+    current_medication: Optional[List[str]] = None
 
     history: List[MedicalHistoryEntry] = []
 

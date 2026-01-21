@@ -11,7 +11,8 @@ from app.services.image_service import save_image
 from app.services.ai_service import analyze_medicine_image
 from app.services.report_service import get_or_create_report
 from app.models.medical_history_entry import MedicalHistoryEntry
-
+from app.models.medical_report import MedicalReport
+from app.schemas.medical_report import MedicalReportIn, MedicalReportOut
 router = APIRouter(prefix="/med", tags=["Med"])
 
 @router.post("/upload-medical-image")
@@ -77,4 +78,52 @@ async def upload_medical_image(
         "message": "Image processed and stored",
         "history_length": len(report.history),
         "latest_entry": report.history[-1]
+    }
+
+
+
+@router.post("/infoUpdate", response_model=MedicalReportOut)
+async def upsert_medical_report(
+    data: MedicalReportIn,
+    current_user = Depends(AuthService.get_current_user)
+):
+    report = await MedicalReport.find_one(
+        MedicalReport.user_id == str(current_user.id)
+    )
+
+    if report:
+        if data.allergy is not None:
+            report.allergy = data.allergy
+        if data.current_medication is not None:
+            report.current_medication = data.current_medication
+        await report.save()
+    else:
+        report = MedicalReport(
+            user_id=str(current_user.id),
+            email=current_user.email,
+            allergy=data.allergy,
+            current_medication=data.current_medication
+        )
+        await report.insert()
+
+    return {
+        "allergy": report.allergy,
+        "current_medication": report.current_medication
+    }
+
+
+@router.get("/infoGet", response_model=MedicalReportOut)
+async def get_medical_report(
+    current_user = Depends(AuthService.get_current_user)
+):
+    report = await MedicalReport.find_one(
+        MedicalReport.user_id == str(current_user.id)
+    )
+
+    if not report:
+        raise HTTPException(status_code=404, detail="Medical report not found")
+
+    return {
+        "allergy": report.allergy,
+        "current_medication": report.current_medication
     }
