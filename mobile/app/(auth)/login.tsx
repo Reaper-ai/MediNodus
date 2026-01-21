@@ -15,8 +15,12 @@ export default function LoginScreen() {
   const [isLoading, setIsLoading] = useState(false);
 
   const { login, register, hapticFeedback } = useGlobalState();
+  
+  // --- FIX APPLIED HERE ---
   const colorScheme = useColorScheme() ?? 'light';
-  const theme = Colors[colorScheme];
+  // If Colors[colorScheme] is undefined, FALLBACK to Colors.light
+  const theme = Colors[colorScheme] || Colors.light; 
+  // ------------------------
 
   const handleSubmit = async () => {
     if (!email || !password || (isRegistering && !fullName)) {
@@ -33,7 +37,7 @@ export default function LoginScreen() {
       } else {
         await login(email, password);
       }
-      // Navigation is handled automatically by _layout.tsx via isLoggedIn state
+      // Navigation is handled automatically by _layout.tsx
     } catch (error: any) {
       Alert.alert("Authentication Failed", error.message);
     } finally {
@@ -44,6 +48,7 @@ export default function LoginScreen() {
   const inputStyle = [
     styles.input, 
     { 
+      // Now 'theme' is guaranteed to be defined, so this won't crash
       backgroundColor: theme.cardBackground, 
       color: theme.text, 
       borderColor: theme.border 

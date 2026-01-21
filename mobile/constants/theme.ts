@@ -18,9 +18,6 @@ export const Colors = {
     dangerBg: '#FEF2F2',
     textSecondary: '#6B7280',
 
-
-
-
   },
   dark: {
     text: '#E6EEF8', // soft white (not pure)
