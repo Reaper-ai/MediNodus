@@ -6,6 +6,7 @@ from app.api.v1.router import api_router
 from fastapi.middleware.cors import CORSMiddleware 
 from app.core.config import settings
 from app.models.user import User
+from app.models.medical_report import MedicalReport
 # Import User model here later
 
 @asynccontextmanager
@@ -15,7 +16,7 @@ async def lifespan(app: FastAPI):
     database = client.medinodus_db
     
     # Initialize Beanie with your models
-    await init_beanie(database=database, document_models=[User])
+    await init_beanie(database=database, document_models=[User,MedicalReport])
     
     print(" Connected to MongoDB Atlas")
     yield

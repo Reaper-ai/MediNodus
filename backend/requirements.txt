@@ -1,12 +1,12 @@
 fastapi>=0.100.0
-# uvicorn[standard]
-# motor                   # Async driver for MongoDB
-# beanie                  # ODM for MongoDB
+uvicorn[standard]
+motor                   # Async driver for MongoDB
+beanie                  # ODM for MongoDB
 pydantic-settings       # For managing .env files
-# python-multipart        # For file uploads (OCR images)
-# python-jose[cryptography] # For JWT Auth
-# passlib[bcrypt]         # Password hashing
-# langchain               # AI Logic
+python-multipart        # For file uploads (OCR images)
+python-jose[cryptography] # For JWT Auth
+passlib[bcrypt]         # Password hashing
+langchain               # AI Logic
 #   # Google Gemini wrapper
 opencv-python-headless  # Computer Vision (Server version)
 #            # OCR (Warning: Large install)
