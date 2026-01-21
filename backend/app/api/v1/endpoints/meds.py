@@ -34,6 +34,7 @@ async def upload_medical_image(
             # Try direct JSON parse
             data = json.loads(raw_text)
             validated = MedicineAIResponse(**data)
+            print(raw_text)
             return validated.dict()
 
         except (json.JSONDecodeError, ValidationError):
