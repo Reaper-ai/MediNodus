@@ -50,3 +50,13 @@ async def login(data: UserLogin):  # <--- CHANGED: Use Pydantic Model (JSON)
 async def logout():
     # JWT logout = client deletes token
     return {"message": "Logged out successfully"}
+
+@router.post("/current") #endpoint to get currently logged in user information
+async def current(
+    current_user: User = Depends(AuthService.get_current_user)
+):
+     return {
+        "email": current_user.email,
+        "full_name": current_user.full_name,
+    }
+

@@ -25,7 +25,7 @@ async def upload_medical_image(
 
     # 1️⃣ Read & store image
     image_bytes = await image.read()
-    image_ref = await save_image(image_bytes, image.filename)
+    image_ref = await save_image(image_bytes, image.filename,str(current_user.id))
     image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
 
 
