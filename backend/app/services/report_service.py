@@ -1,4 +1,4 @@
-from app.models.medical_report import MedicalReport
+from backend.app.models.medical_record import MedicalReport
 
 async def get_or_create_report(user):
     report = await MedicalReport.find_one(

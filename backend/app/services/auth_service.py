@@ -5,7 +5,7 @@ from jose import jwt, JWTError
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 
-from app.core.config import settings
+from backend.app.config import settings
 from app.models.user import User
 
 

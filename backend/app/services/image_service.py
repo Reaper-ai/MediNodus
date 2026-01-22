@@ -14,9 +14,9 @@
 #         f.write(image_bytes)
 
 #     return str(path)
+
 import cloudinary
-from cloudinary.utils import cloudinary_url
-from app.core.config import settings
+from backend.app.config import settings
 import cloudinary.uploader
 from io import BytesIO
 

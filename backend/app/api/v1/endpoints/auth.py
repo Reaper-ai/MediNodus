@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException , Depends
 from app.models.user import User
-from app.schemas.auth_schema import UserRegister, UserLogin, TokenResponse
+from app.schemas import UserRegister, UserLogin, TokenResponse
 from app.services.auth_service import AuthService
 
 from fastapi.security import OAuth2PasswordRequestForm

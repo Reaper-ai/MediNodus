@@ -2,8 +2,7 @@ from transformers import pipeline
 from PIL import Image
 import torch
 
-
-def initialize_model():
+async def initialize_model():
     model_id = "unsloth/medgemma-1.5-4b-it-unsloth-bnb-4bit"
     pipe = pipeline(
     "image-text-to-text",
@@ -13,8 +12,10 @@ def initialize_model():
 
     return pipe
 
-def analyze_medicine_image(pipe, image)-> str:
+async def analyze_medicine_image(image)-> str:
     
+    pipe = await initialize_model()
+
     messages = [
         {
             "role": "user",
@@ -39,7 +40,10 @@ def analyze_medicine_image(pipe, image)-> str:
     return output[0]["generated_text"][-1]["content"]
 
 
-def analyse_medicine_effects(pipe, medical_history, medicine_info) -> str:    
+async def analyze_medicine_effects(medical_history, medicine_info) -> str:    
+    
+    pipe = await initialize_model()
+
     messages = [
         {
             "role": "user",
@@ -48,7 +52,7 @@ def analyse_medicine_effects(pipe, medical_history, medicine_info) -> str:
                 {"type": "text", "text": medicine_info},
                 {
                     "type": "text",
-                    "text": """Analyze this medicine and patient history to tell any warings,precautions, or side effects that can happen
+                    "text": """Analyze the given medicince information and patient history to tell any warings,precautions, or side effects that can happen
                     """
                 }
             ]
@@ -60,7 +64,10 @@ def analyse_medicine_effects(pipe, medical_history, medicine_info) -> str:
     return output[0]["generated_text"][-1]["content"]
 
 
-def analyse_report(pipe, report):
+async def analyze_report( report):
+    
+    pipe = await initialize_model()
+
     messages = [
         {
             "role": "user",
@@ -93,24 +100,3 @@ def analyse_report(pipe, report):
     output = pipe(text=messages, max_new_tokens=2000)
     print("Response received")
     return output[0]["generated_text"][-1]["content"]
-
-import json
-import re
-
-def clean_and_parse_json(raw_text):
-    # 1. Regex to find the JSON block { ... }
-    # This ignores everything before the first '{' (the thought process)
-    # and everything after the last '}'
-    match = re.search(r"(\{.*\})", raw_text, re.DOTALL)
-    
-    if match:
-        json_str = match.group(1)
-        try:
-            return json.loads(json_str)
-        except json.JSONDecodeError:
-            print("Found JSON brackets, but content was invalid.")
-            return None
-    else:
-        print("No JSON object found in output.")
-        return None
-

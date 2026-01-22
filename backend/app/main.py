@@ -4,9 +4,9 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from beanie import init_beanie
 from app.api.v1.router import api_router
 from fastapi.middleware.cors import CORSMiddleware 
-from app.core.config import settings
+from backend.app.config import settings
 from app.models.user import User
-from app.models.medical_report import MedicalReport
+from backend.app.models.medical_record import MedicalReport
 # Import User model here later
 
 @asynccontextmanager
