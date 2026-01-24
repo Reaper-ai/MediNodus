@@ -3,14 +3,14 @@ import { View, StyleSheet, Alert, Image } from 'react-native';
 import { Appbar, Text, Button, IconButton, ActivityIndicator, useTheme } from 'react-native-paper';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as DocumentPicker from 'expo-document-picker';
-import { useRouter, useLocalSearchParams } from 'expo-router'; // Fix: Import params hook
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { apiService } from '../services/api';
 import { useGlobalState } from '../context/GlobalStateContext';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function ScanScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams(); // Get params
+  const params = useLocalSearchParams();
   const theme = useTheme();
   const insets = useSafeAreaInsets();
   const { token } = useGlobalState();
@@ -20,23 +20,7 @@ export default function ScanScreen() {
   const [loading, setLoading] = useState(false);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
 
-  // Fix: Auto-trigger document picker if action is 'upload'
-  useEffect(() => {
-    if (params.action === 'upload') {
-      pickDocument();
-    }
-  }, [params.action]);
-
-  if (!permission) return <View />;
-  if (!permission.granted) {
-    return (
-      <View style={styles.permissionContainer}>
-        <Text style={{ marginBottom: 10 }}>Camera permission is required</Text>
-        <Button mode="contained" onPress={requestPermission}>Grant Permission</Button>
-      </View>
-    );
-  }
-
+  // FIX: Moved helper functions ABOVE the early returns so they are always defined
   const handleUpload = async (uri: string, type: 'image' | 'pdf') => {
     setLoading(true);
     try {
@@ -71,16 +55,32 @@ export default function ScanScreen() {
       if (!result.canceled && result.assets && result.assets.length > 0) {
         const file = result.assets[0];
         const type = file.mimeType?.includes('pdf') ? 'pdf' : 'image';
-        // If triggered automatically, verify user actually picked something
         handleUpload(file.uri, type);
       } else if (params.action === 'upload') {
-        // If user cancelled the auto-picker, go back to dashboard
         router.back();
       }
     } catch (err) {
       console.log(err);
     }
   };
+
+  // FIX: useEffect is now safe because pickDocument is definitely defined
+  useEffect(() => {
+    if (params.action === 'upload') {
+      pickDocument();
+    }
+  }, [params.action]);
+
+  // --- Early Returns (Must be AFTER function definitions) ---
+  if (!permission) return <View />;
+  if (!permission.granted) {
+    return (
+      <View style={styles.permissionContainer}>
+        <Text style={{ marginBottom: 10 }}>Camera permission is required</Text>
+        <Button mode="contained" onPress={requestPermission}>Grant Permission</Button>
+      </View>
+    );
+  }
 
   return (
     <View style={[styles.container, { backgroundColor: 'black', paddingTop: insets.top }]}>
@@ -111,9 +111,7 @@ export default function ScanScreen() {
             <Button mode="contained" onPress={() => handleUpload(capturedImage, 'image')}>Analyze</Button>
           </View>
         ) : (
-          // Fix: Consolidated buttons (Removed the 3rd button)
           <View style={styles.captureRow}>
-            {/* Left: Gallery/Files */}
             <View style={styles.sideBtn}>
               <IconButton 
                 icon="image-multiple" 
@@ -125,7 +123,6 @@ export default function ScanScreen() {
               <Text style={styles.btnLabel}>Upload</Text>
             </View>
 
-            {/* Center: Capture */}
             <IconButton 
               icon="circle-slice-8" 
               iconColor="white" 
@@ -134,7 +131,6 @@ export default function ScanScreen() {
               style={{ margin: 0 }} 
             />
 
-            {/* Right: Empty spacer to balance layout or Flash toggle if needed later */}
             <View style={styles.sideBtn} />
           </View>
         )}
