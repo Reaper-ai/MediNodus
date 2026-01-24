@@ -68,6 +68,6 @@ export default function AppearanceScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, paddingHorizontal: 24 }, // Consistent alignment
   section: { width: '100%' },
-  listItem: { paddingHorizontal: 0 },
-  subheader: { paddingHorizontal: 0 }
+  listItem: { paddingHorizontal: 24 },
+  subheader: { paddingHorizontal: 24 }
 });

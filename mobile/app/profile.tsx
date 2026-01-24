@@ -9,7 +9,6 @@ export default function ProfileScreen() {
   const { user, logout } = useGlobalState();
   const theme = useTheme();
   const router = useRouter();
-  const [isDark, setIsDark] = React.useState(false);
 
   const handleLogout = () => {
     logout();
@@ -18,7 +17,6 @@ export default function ProfileScreen() {
 
   return (
     <ThemedView style={styles.container} safeArea={true}>
-      
       <Appbar.Header style={{ backgroundColor: 'transparent' }}>
         <Appbar.BackAction onPress={() => router.back()} />
         <Appbar.Content title="My Profile" />
@@ -49,7 +47,28 @@ export default function ProfileScreen() {
 
         <Divider style={styles.divider} />
 
-        {/* Settings List */}
+        <List.Section>
+          <List.Subheader style={styles.subheader}>Personal Data</List.Subheader>
+          
+          {/* FIX: Added Medical ID Link */}
+          <List.Item
+            title="Medical History"
+            description="Allergies & Conditions"
+            left={() => <List.Icon icon="medical-bag" />}
+            right={() => <List.Icon icon="chevron-right" />}
+            onPress={() => router.push('/profile/medical')}
+            style={styles.listItem}
+          />
+          
+          <List.Item
+            title="Export Data"
+            left={() => <List.Icon icon="database-export" />}
+            right={() => <List.Icon icon="chevron-right" />}
+            onPress={() => router.push('/profile/data')}
+            style={styles.listItem}
+          />
+        </List.Section>
+
         <List.Section>
           <List.Subheader style={styles.subheader}>Preferences</List.Subheader>
           <List.Item
@@ -59,22 +78,9 @@ export default function ProfileScreen() {
             onPress={() => router.push('/profile/appearance')}
             style={styles.listItem}
           />
-        </List.Section>
-
-        <Divider style={styles.divider} />
-
-        <List.Section>
-          <List.Subheader style={styles.subheader}>Support</List.Subheader>
-          <List.Item
-            title="Data & Privacy"
-            left={() => <List.Icon icon="shield-account" />}
-            right={() => <List.Icon icon="chevron-right" />}
-            onPress={() => router.push('/profile/data')}
-            style={styles.listItem}
-          />
           <List.Item
             title="Privacy Policy"
-            left={() => <List.Icon icon="file-document-outline" />}
+            left={() => <List.Icon icon="shield-check" />}
             right={() => <List.Icon icon="chevron-right" />}
             onPress={() => router.push('/profile/privacypolicy')}
             style={styles.listItem}
@@ -100,13 +106,11 @@ export default function ProfileScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  // Fix: Unified padding for the whole scroll view
   content: { paddingHorizontal: 24, paddingBottom: 40 },
   header: { alignItems: 'center', marginBottom: 10 },
   name: { marginTop: 16, fontWeight: 'bold' },
-  editBtn: { marginTop: 20, width: '100%' }, // Made button full width of container
+  editBtn: { marginTop: 20, width: '100%' },
   divider: { marginVertical: 10 },
-  // Fix: Remove default padding from List Items to align with container
   listItem: { paddingHorizontal: 0 },
   subheader: { paddingHorizontal: 0 }, 
   logoutContainer: { marginTop: 20 }

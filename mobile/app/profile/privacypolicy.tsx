@@ -1,15 +1,15 @@
 import React from 'react';
 import { StyleSheet, ScrollView } from 'react-native';
-import { Appbar, Surface, Text, Divider, Title, Paragraph, List } from 'react-native-paper';
+import { Appbar, Text, Divider, Title, Paragraph, List } from 'react-native-paper';
 import { useRouter } from 'expo-router';
+import { ThemedView } from '../../components/themed-view';
 
 export default function PrivacyPolicyScreen() {
   const router = useRouter();
 
   return (
-    <Surface style={styles.container}>
-      {/* Header */}
-      <Appbar.Header elevated>
+    <ThemedView style={styles.container} safeArea>
+      <Appbar.Header style={{ backgroundColor: 'transparent' }}>
         <Appbar.BackAction onPress={() => router.back()} />
         <Appbar.Content title="Privacy Policy" />
       </Appbar.Header>
@@ -50,42 +50,17 @@ export default function PrivacyPolicyScreen() {
           Last updated: January 24, 2026
         </Text>
       </ScrollView>
-    </Surface>
+    </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  content: {
-    padding: 20,
-    paddingBottom: 40,
-  },
-  mainTitle: {
-    marginBottom: 10,
-    fontWeight: 'bold',
-  },
-  intro: {
-    marginBottom: 20,
-    opacity: 0.8,
-  },
-  divider: {
-    marginVertical: 10,
-  },
-  subheader: {
-    fontWeight: 'bold',
-    fontSize: 16,
-    paddingLeft: 0,
-    marginTop: 10,
-  },
-  paragraph: {
-    marginBottom: 10,
-    lineHeight: 22,
-  },
-  footer: {
-    textAlign: 'center',
-    marginTop: 30,
-    opacity: 0.5,
-  },
+  container: { flex: 1 },
+  content: { paddingHorizontal: 24, paddingBottom: 40 }, // Fixed Alignment
+  mainTitle: { marginBottom: 10, fontWeight: 'bold' },
+  intro: { marginBottom: 20, opacity: 0.8 },
+  divider: { marginVertical: 10 },
+  subheader: { fontWeight: 'bold', fontSize: 16, paddingHorizontal: 0, marginTop: 10 },
+  paragraph: { marginBottom: 10, lineHeight: 22 },
+  footer: { textAlign: 'center', marginTop: 30, opacity: 0.5 }
 });
