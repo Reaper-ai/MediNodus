@@ -3,7 +3,7 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import { Avatar, Text, List, Switch, Button, Divider, useTheme, Appbar } from 'react-native-paper';
 import { useGlobalState } from '../context/GlobalStateContext';
 import { useRouter } from 'expo-router';
-import { ThemedView } from '../components/themed-view'; // Ensures this matches your components folder
+import { ThemedView } from '../components/themed-view';
 
 export default function ProfileScreen() {
   const { user, logout } = useGlobalState();
@@ -17,10 +17,8 @@ export default function ProfileScreen() {
   };
 
   return (
-    // FIX: safeArea={true} prevents status bar overlap
     <ThemedView style={styles.container} safeArea={true}>
       
-      {/* Optional: Add a Back Button since it's a separate screen */}
       <Appbar.Header style={{ backgroundColor: 'transparent' }}>
         <Appbar.BackAction onPress={() => router.back()} />
         <Appbar.Content title="My Profile" />
@@ -53,35 +51,33 @@ export default function ProfileScreen() {
 
         {/* Settings List */}
         <List.Section>
-          <List.Subheader>Preferences</List.Subheader>
-          <List.Item
-            title="Dark Mode"
-            left={() => <List.Icon icon="theme-light-dark" />}
-            right={() => <Switch value={isDark} onValueChange={setIsDark} />}
-          />
+          <List.Subheader style={styles.subheader}>Preferences</List.Subheader>
           <List.Item
             title="Appearance"
             left={() => <List.Icon icon="palette" />}
             right={() => <List.Icon icon="chevron-right" />}
             onPress={() => router.push('/profile/appearance')}
+            style={styles.listItem}
           />
         </List.Section>
 
         <Divider style={styles.divider} />
 
         <List.Section>
-          <List.Subheader>Support</List.Subheader>
+          <List.Subheader style={styles.subheader}>Support</List.Subheader>
           <List.Item
             title="Data & Privacy"
             left={() => <List.Icon icon="shield-account" />}
             right={() => <List.Icon icon="chevron-right" />}
             onPress={() => router.push('/profile/data')}
+            style={styles.listItem}
           />
           <List.Item
             title="Privacy Policy"
             left={() => <List.Icon icon="file-document-outline" />}
             right={() => <List.Icon icon="chevron-right" />}
             onPress={() => router.push('/profile/privacypolicy')}
+            style={styles.listItem}
           />
         </List.Section>
 
@@ -104,10 +100,14 @@ export default function ProfileScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  content: { paddingBottom: 40 },
-  header: { alignItems: 'center', paddingHorizontal: 20, marginBottom: 10 },
+  // Fix: Unified padding for the whole scroll view
+  content: { paddingHorizontal: 24, paddingBottom: 40 },
+  header: { alignItems: 'center', marginBottom: 10 },
   name: { marginTop: 16, fontWeight: 'bold' },
-  editBtn: { marginTop: 20, width: '50%' },
+  editBtn: { marginTop: 20, width: '100%' }, // Made button full width of container
   divider: { marginVertical: 10 },
-  logoutContainer: { padding: 20, marginTop: 10 }
+  // Fix: Remove default padding from List Items to align with container
+  listItem: { paddingHorizontal: 0 },
+  subheader: { paddingHorizontal: 0 }, 
+  logoutContainer: { marginTop: 20 }
 });
