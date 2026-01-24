@@ -2,15 +2,28 @@ from transformers import pipeline
 from PIL import Image
 import torch
 
+_global_pipe = None
+
 async def initialize_model():
+    global _global_pipe
+    
+    # 2. Check if the model is already loaded. If so, return it.
+    if _global_pipe is not None:
+        return _global_pipe
+
+    print("Loading Model into Memory... (This happens only once)")
     model_id = "unsloth/medgemma-1.5-4b-it-unsloth-bnb-4bit"
-    pipe = pipeline(
-    "image-text-to-text",
-    model=model_id,
-    dtype=torch.bfloat16,
+    
+    # 3. Load the model and assign it to the global variable
+    _global_pipe = pipeline(
+        "image-text-to-text",
+        model=model_id,
+        dtype=torch.bfloat16,
+        # 'device_map="auto"' is recommended if you have accelerate installed, 
+        # otherwise, transformers usually picks the GPU automatically or you can add device=0
     )
 
-    return pipe
+    return _global_pipe
 
 async def analyze_medicine_image(image)-> str:
     

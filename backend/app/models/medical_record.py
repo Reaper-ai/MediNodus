@@ -1,7 +1,7 @@
 # app/models/medical_report.py
 from beanie import Document
 from typing import List
-from backend.app.models.history_entry import AppHistoryEntry
+from app.models.history_entry import AppHistoryEntry
 
 class MedicalHistoryRecord(Document):
     user_id: str
