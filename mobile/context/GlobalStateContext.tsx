@@ -2,9 +2,15 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import * as Haptics from 'expo-haptics';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
-import { authService } from '../services/auth'; // UNCOMMENTED THIS
+import { authService } from '../services/auth';
 
 type ThemeType = 'light' | 'dark' | 'system';
+
+// 1. Define a proper User interface
+export interface User {
+  name: string;
+  email: string;
+}
 
 interface MedicalInfo {
   conditions: string;
@@ -26,20 +32,19 @@ interface GlobalContextType {
   theme: ThemeType;
   isHighContrast: boolean;
   isLoggedIn: boolean;
-  userName: string;
+  user: User | null; // 2. Changed from userName to user object
   token: string | null;
   isLoading: boolean;
   medicalInfo: MedicalInfo;
   reports: Report[];
   
-  // Actions
   setTheme: (t: ThemeType) => void;
   setHighContrast: (val: boolean) => void;
   updateProfile: (name: string) => void;
   updateMedicalInfo: (info: Partial<MedicalInfo>) => void;
   saveReport: (reportData: Omit<Report, 'id' | 'date'>) => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, fullName: string) => Promise<void>; // Added Register
+  register: (email: string, password: string, fullName: string) => Promise<void>;
   logout: () => void;
   hapticFeedback: (style?: Haptics.ImpactFeedbackStyle) => void;
 }
@@ -51,8 +56,11 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
   const [theme, setThemeState] = useState<ThemeType>('system');
   const [isHighContrast, setHighContrastState] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [userName, setUserName] = useState('');
+  
+  // 3. State now holds the User object
+  const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
+  
   const [reports, setReports] = useState<Report[]>([]);
   const [medicalInfo, setMedicalInfoState] = useState<MedicalInfo>({
     conditions: '', allergies: '', medications: ''
@@ -61,12 +69,12 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const loadState = async () => {
       try {
-        const [auth, savedToken, th, hc, user, med, savedReports] = await Promise.all([
+        const [auth, savedToken, th, hc, savedUserStr, med, savedReports] = await Promise.all([
           AsyncStorage.getItem('isLoggedIn'),
           AsyncStorage.getItem('userToken'),
           AsyncStorage.getItem('theme'),
           AsyncStorage.getItem('highContrast'),
-          AsyncStorage.getItem('userName'),
+          AsyncStorage.getItem('user'), // Load full user object
           AsyncStorage.getItem('medicalInfo'),
           AsyncStorage.getItem('reports')
         ]);
@@ -74,7 +82,7 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
         if (auth === 'true' && savedToken) {
           setIsLoggedIn(true);
           setToken(savedToken);
-          if (user) setUserName(user);
+          if (savedUserStr) setUser(JSON.parse(savedUserStr));
         }
         if (th) setThemeState(th as ThemeType);
         if (hc) setHighContrastState(hc === 'true');
@@ -94,36 +102,50 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
     if (Platform.OS !== 'web') Haptics.impactAsync(style);
   };
 
-  // REAL LOGIN IMPLEMENTATION
   const login = async (email: string, password: string) => {
     try {
       const data = await authService.login(email, password);
-      
       const accessToken = data.access_token;
-      // If backend returns user info, use it. Otherwise derive from email
-      const name = email.split('@')[0]; 
+      
+      // Construct user object
+      const newUser: User = {
+        name: email.split('@')[0], // Fallback name
+        email: email
+      };
 
       setToken(accessToken);
       setIsLoggedIn(true);
-      setUserName(name);
+      setUser(newUser);
 
       await AsyncStorage.setItem('isLoggedIn', 'true');
       await AsyncStorage.setItem('userToken', accessToken);
-      await AsyncStorage.setItem('userName', name);
+      await AsyncStorage.setItem('user', JSON.stringify(newUser));
       
       hapticFeedback(Haptics.ImpactFeedbackStyle.Medium);
     } catch (error) {
       console.error("Login failed:", error);
-      throw error; // Propagate error to UI
+      throw error;
     }
   };
 
-  // REAL REGISTER IMPLEMENTATION
   const register = async (email: string, password: string, fullName: string) => {
     try {
       await authService.register(email, password, fullName);
-      // Auto-login after successful registration
-      await login(email, password);
+      // Auto-login logic
+      const data = await authService.login(email, password);
+      const accessToken = data.access_token;
+
+      const newUser: User = { name: fullName, email };
+      
+      setToken(accessToken);
+      setIsLoggedIn(true);
+      setUser(newUser);
+
+      await AsyncStorage.setItem('isLoggedIn', 'true');
+      await AsyncStorage.setItem('userToken', accessToken);
+      await AsyncStorage.setItem('user', JSON.stringify(newUser));
+
+      hapticFeedback(Haptics.ImpactFeedbackStyle.Medium);
     } catch (error) {
       console.error("Registration failed:", error);
       throw error;
@@ -132,9 +154,9 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
 
   const logout = async () => {
     setIsLoggedIn(false);
-    setUserName('');
+    setUser(null);
     setToken(null);
-    await AsyncStorage.multiRemove(['isLoggedIn', 'userToken', 'userName']);
+    await AsyncStorage.multiRemove(['isLoggedIn', 'userToken', 'user']);
     hapticFeedback(Haptics.ImpactFeedbackStyle.Medium);
   };
 
@@ -149,8 +171,11 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const updateProfile = (name: string) => {
-    setUserName(name);
-    AsyncStorage.setItem('userName', name);
+    if (user) {
+      const updatedUser = { ...user, name };
+      setUser(updatedUser);
+      AsyncStorage.setItem('user', JSON.stringify(updatedUser));
+    }
   };
 
   const updateMedicalInfo = (info: Partial<MedicalInfo>) => {
@@ -173,7 +198,7 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
 
   return (
     <GlobalContext.Provider value={{
-      theme, isHighContrast, isLoggedIn, userName, token, isLoading,
+      theme, isHighContrast, isLoggedIn, user, token, isLoading,
       medicalInfo, reports,
       setTheme, setHighContrast, login, register, logout, updateProfile,
       updateMedicalInfo, saveReport, hapticFeedback

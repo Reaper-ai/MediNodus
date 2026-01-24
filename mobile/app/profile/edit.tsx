@@ -1,23 +1,23 @@
 import React, { useState } from 'react';
-import { StyleSheet, Alert } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { Appbar, TextInput, Button, Surface } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { useGlobalState } from '../../context/GlobalStateContext';
 
 export default function EditProfile() {
   const router = useRouter();
-  const { userName, updateProfile } = useGlobalState();
-  const [name, setName] = useState(userName);
+  const { user, updateProfile } = useGlobalState(); // FIX: Destructure 'user', not 'userName'
+  const [name, setName] = useState(user?.name || ''); // FIX: Use user.name
   const [loading, setLoading] = useState(false);
 
   const handleSave = async () => {
     setLoading(true);
-    // Simulate API call
+    // Simulate API call / local update
     setTimeout(() => {
       updateProfile(name);
       setLoading(false);
       router.back();
-    }, 1000);
+    }, 500);
   };
 
   return (
