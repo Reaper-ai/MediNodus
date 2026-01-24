@@ -2,10 +2,12 @@ import { Tabs } from 'expo-router';
 import React from 'react';
 import { Platform } from 'react-native';
 import { useTheme } from 'react-native-paper';
+import { useSafeAreaInsets } from 'react-native-safe-area-context'; // Import this
 import { IconSymbol } from '../../components/ui/icon-symbol';
 
 export default function TabLayout() {
   const theme = useTheme();
+  const insets = useSafeAreaInsets(); // Get safe area insets
 
   return (
     <Tabs
@@ -17,10 +19,10 @@ export default function TabLayout() {
           backgroundColor: theme.colors.elevation.level2,
           borderTopWidth: 0,
           elevation: 5,
-          // Fix: Height should adapt to platform, but let content decide padding
-          height: Platform.OS === 'android' ? 70 : 90,
-          paddingBottom: Platform.OS === 'android' ? 10 : 30, // Fix safe area overlap
-          paddingTop: 10,
+          // Fix: Dynamic height calculation based on safe area
+          height: 60 + insets.bottom,
+          paddingBottom: insets.bottom + 5, // Add breathing room
+          paddingTop: 5,
         },
       }}>
       <Tabs.Screen
