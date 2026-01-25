@@ -87,6 +87,11 @@ HF_TOKEN=<hf_auth_token>
 # No External AI Keys Required!
 
 ```
+Configure API URL: Create a new file named .env inside the mobile/ folder and add your backend URL:
+```env
+# For Local Testing (Replace with your actual PC IP, not localhost)
+EXPO_PUBLIC_API_URL=[http://192.168.1.5:8000](http://192.168.1.5:8000)
+```
 
 ### 1. Backend (Docker)
 
@@ -117,9 +122,9 @@ npx expo start
 
 ## 🤝 Team
 
-* **Member 1:** Android/React Native Engineering
-* **Member 2:** Backend Systems & Database Architecture
-* **Member 3:** AI/ML Pipelines & RAG Strategy
+* **Gaurav Upreti:** Android/React Native Engineering
+* **Juss PAtel:** Backend Systems & Database Architecture
+* **Ashmeet Singh Sandhu:** AI/ML Pipelines & Research
 
 ---
 
