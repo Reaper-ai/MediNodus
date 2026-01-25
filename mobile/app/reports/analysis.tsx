@@ -16,24 +16,23 @@ export default function AnalysisScreen() {
     // 1. Parse the passed data safely
     if (params.data) {
       try {
-        const parsed = typeof params.data === 'string' ? JSON.parse(params.data) : params.data;
+        const rawData = Array.isArray(params.data) ? params.data[0] : params.data;
+        const parsed = typeof rawData === 'string' ? JSON.parse(rawData) : rawData;
         
         // 2. Detect Type (Backend schema check)
         if (parsed.drug_name) {
           setType('med');
-          setData(parsed);
-        } else if (parsed.summary) {
-          setType('report');
-          setData(parsed);
         } else {
-          // Fallback/Unknown
-          setData(parsed);
+          setType('report');
         }
+        setData(parsed);
+
       } catch (e) {
         console.error("Error parsing analysis data", e);
       }
     }
-  }, [params]);
+    // FIX: Depend only on params.data (string), not the whole params object
+  }, [params.data]); 
 
   if (!data) {
     return (
