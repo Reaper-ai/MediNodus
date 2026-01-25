@@ -21,3 +21,4 @@ accelerate
 scipy
 protobuf
 sentencepiece
+huggingface_hub

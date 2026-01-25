@@ -1,12 +1,22 @@
 from transformers import pipeline
 from PIL import Image
 import torch
-
+from huggingface_hub import login
+from app.config import settings
 _global_pipe = None
 
 async def initialize_model():
     global _global_pipe
     
+    #------------------ AUTHENTICATION ------------------
+    if settings.HF_TOKEN:
+        print("🔐 Authenticating with Hugging Face...")
+        login(token=settings.HF_TOKEN)
+    else:
+        print("⚠️  Warning: HF_TOKEN not found. Download may fail for gated models.")
+    # ----------------------------------------------------
+
+
     # 2. Check if the model is already loaded. If so, return it.
     if _global_pipe is not None:
         return _global_pipe

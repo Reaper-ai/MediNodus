@@ -1,20 +1,15 @@
-import os
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     PROJECT_NAME: str = "MediNodus API"
-    MONGO_URL: str 
+    MONGO_URL: str
     SECRET_KEY: str
-    MONGO_NAME :str= "main"
-    CLOUDINARY_KEY:str
-    # ALGORITHM: str = "HS256"
-    # GOOGLE_API_KEY: str = "your_google_api_key_here"
+    ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    CLOUDINARY_KEY: str
+    HF_TOKEN: str | None = None 
 
-    # Pydantic V2 way to load .env file
-    model_config = SettingsConfigDict(
-        env_file=".env", 
-        env_ignore_empty=True,
-        extra="ignore"
-    )
+    class Config:
+        env_file = ".env"
 
 settings = Settings()
