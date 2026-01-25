@@ -3,7 +3,7 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import { Surface, Text, Card, Button, Avatar, IconButton, useTheme, List } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { ThemedView } from '../../components/themed-view';
-import { useGlobalState } from '../../context/GlobalStateContext';
+import { useGlobalState, HistoryItem } from '../../context/GlobalStateContext';
 
 const HEALTH_QUOTES = [
   "The greatest wealth is health.",
@@ -12,7 +12,6 @@ const HEALTH_QUOTES = [
   "Physical fitness is the first requisite of happiness.",
   "A healthy outside starts from the inside.",
   "Take care of your body. It's the only place you have to live.",
-  "To keep the body in good health is a duty... otherwise we shall not be able to keep our mind strong and clear.",
   "Hydration is key to a healthy mind and body."
 ];
 
@@ -23,12 +22,32 @@ export default function Dashboard() {
   const [quote, setQuote] = useState("");
 
   useEffect(() => {
-    // Pick a random quote every time the component mounts
-    const random = HEALTH_QUOTES[Math.floor(Math.random() * HEALTH_QUOTES.length)];
-    setQuote(random);
+    setQuote(HEALTH_QUOTES[Math.floor(Math.random() * HEALTH_QUOTES.length)]);
   }, []);
 
-  const latestReport = reports.length > 0 ? reports[0] : null;
+  const recentItems = reports.slice(0, 2);
+
+  const renderRecentItem = (item: HistoryItem) => (
+    <Card key={item._id} mode="outlined" style={styles.recentCard} onPress={() => 
+      router.push({ 
+        pathname: '/reports/analysis', 
+        params: { data: JSON.stringify(item.response), type: item.type } 
+      })
+    }>
+      <View style={{ flexDirection: 'row', padding: 10, alignItems: 'center' }}>
+        <Avatar.Image size={40} source={{ uri: item.image_ref }} />
+        <View style={{ marginLeft: 12, flex: 1 }}>
+          <Text variant="titleSmall" style={{ fontWeight: 'bold' }}>
+            {item.type === 'med' ? (item.response?.drug_name || "Medicine") : (item.response?.patient_name || "Report")}
+          </Text>
+          <Text variant="bodySmall" style={{ color: 'gray' }}>
+            {new Date(item.date).toLocaleDateString()}
+          </Text>
+        </View>
+        <IconButton icon="chevron-right" size={20} />
+      </View>
+    </Card>
+  );
 
   return (
     <ThemedView style={styles.container} safeArea={true}>
@@ -55,7 +74,7 @@ export default function Dashboard() {
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         
-        {/* 1. Daily Quote Card (Replaced the Image Card) */}
+        {/* Quote Card */}
         <Card style={[styles.quoteCard, { backgroundColor: theme.colors.tertiaryContainer }]}>
           <Card.Content>
             <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
@@ -70,11 +89,9 @@ export default function Dashboard() {
           </Card.Content>
         </Card>
 
-        {/* 2. Actions Grid (Renamed & Resized) */}
+        {/* Actions Grid */}
         <Text variant="titleMedium" style={styles.sectionTitle}>Actions</Text>
         <View style={styles.grid}>
-          
-          {/* Upload Button */}
           <Card mode="outlined" style={styles.gridCard} onPress={() => router.push({ pathname: '/scan', params: { action: 'upload' } })}>
             <Card.Content style={styles.centerContent}>
               <Avatar.Icon size={64} icon="file-upload" style={{ backgroundColor: theme.colors.secondaryContainer }} color={theme.colors.onSecondaryContainer} />
@@ -83,7 +100,6 @@ export default function Dashboard() {
             </Card.Content>
           </Card>
           
-          {/* Scan Button (Moved here from Hero) */}
           <Card mode="outlined" style={styles.gridCard} onPress={() => router.push('/scan')}>
              <Card.Content style={styles.centerContent}>
               <Avatar.Icon size={64} icon="camera" style={{ backgroundColor: theme.colors.primaryContainer }} color={theme.colors.onPrimaryContainer} />
@@ -91,30 +107,21 @@ export default function Dashboard() {
               <Text variant="bodySmall" style={{color: 'gray'}}>Use Camera</Text>
             </Card.Content>
           </Card>
-
         </View>
 
-        {/* 3. Recent Activity */}
+        {/* Recent Activity */}
         <View style={styles.recentHeader}>
           <Text variant="titleMedium" style={styles.sectionTitle}>Recent</Text>
-          <Button compact onPress={() => router.push('/(tabs)/reports')}>History Tab</Button>
+          <Button compact onPress={() => router.push('/(tabs)/reports')}>See All</Button>
         </View>
         
-        <Surface style={styles.recentList} elevation={1}>
-          {latestReport ? (
-            <List.Item
-              title={latestReport.title || "Untitled Analysis"}
-              description={latestReport.date}
-              left={props => <List.Icon {...props} icon="file-document-outline" />}
-              right={props => <List.Icon {...props} icon="chevron-right" />}
-              onPress={() => router.push('/(tabs)/reports')}
-            />
-          ) : (
-            <View style={styles.emptyState}>
-              <Text variant="bodyMedium" style={{ color: theme.colors.outline }}>No recent scans found.</Text>
-            </View>
-          )}
-        </Surface>
+        {recentItems.length > 0 ? (
+          recentItems.map(renderRecentItem)
+        ) : (
+          <Surface style={styles.emptyState} elevation={0}>
+            <Text variant="bodyMedium" style={{ color: theme.colors.outline }}>No recent scans found.</Text>
+          </Surface>
+        )}
 
       </ScrollView>
     </ThemedView>
@@ -132,18 +139,13 @@ const styles = StyleSheet.create({
     marginBottom: 20
   },
   scrollContent: { paddingHorizontal: 24, paddingBottom: 40 },
-  
   quoteCard: { marginBottom: 25, borderRadius: 24 },
-  
   sectionTitle: { fontWeight: 'bold', marginBottom: 12 },
-  
   grid: { flexDirection: 'row', gap: 12, marginBottom: 25 },
-  // FIX: Increased height for bigger buttons
   gridCard: { flex: 1, borderRadius: 20, minHeight: 160, justifyContent: 'center' },
   centerContent: { alignItems: 'center', paddingVertical: 20 },
   gridLabel: { marginTop: 12, fontWeight: 'bold' },
-
   recentHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
-  recentList: { borderRadius: 16, overflow: 'hidden', backgroundColor: 'transparent' }, 
-  emptyState: { padding: 20, alignItems: 'center' }
+  recentCard: { marginBottom: 10, borderRadius: 12 },
+  emptyState: { padding: 20, alignItems: 'center', backgroundColor: '#f5f5f5', borderRadius: 12 }
 });

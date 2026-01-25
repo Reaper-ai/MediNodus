@@ -2,6 +2,7 @@
 from fastapi import UploadFile, File, Depends, HTTPException, APIRouter
 from PIL import Image
 import json, re, io
+from typing import List
 from datetime import datetime
 from pydantic import ValidationError
 from app.schemas import MedicineAIResponse, MedicalHistory
@@ -12,7 +13,7 @@ from app.models.history_entry import AppHistoryEntry
 from app.models.medical_record import MedicalHistoryRecord
 from app.services.fda_service import FDAService
 from pdf2image import convert_from_bytes
-
+from beanie.operators import In
 router = APIRouter(prefix="/med", tags=["Med"])
 
 # ---- HELPER --------------
@@ -292,3 +293,33 @@ async def get_medical_report(
         "current_medication": report.current_medication,
         "chronic_condition" : report.chronic_condition
     }
+
+# -------- HISTORY -------------------
+@router.get("/history")
+async def get_user_history(current_user = Depends(AuthService.get_current_user)):
+    # 1. Fetch the user's record container (WITHOUT fetch_links to avoid the crash)
+    record = await MedicalHistoryRecord.find_one(
+        MedicalHistoryRecord.user_id == str(current_user.id)
+    )
+    
+    if not record or not record.history:
+        return []
+    
+    # 2. Manually extract IDs from the Links
+    # Beanie Link objects store the reference in .ref.id
+    try:
+        ids = [link.ref.id for link in record.history if link.ref]
+    except AttributeError:
+        # Fallback if structure is different in your version
+        ids = [link.id for link in record.history if hasattr(link, 'id')]
+
+    if not ids:
+        return []
+
+    # 3. Fetch the actual documents using the IDs
+    # This bypasses the broken Aggregation pipeline in Motor 3.0
+    history_entries = await AppHistoryEntry.find(
+        In(AppHistoryEntry.id, ids)
+    ).sort("-date").to_list()
+    
+    return history_entries

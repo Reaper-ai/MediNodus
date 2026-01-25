@@ -103,6 +103,20 @@ export const apiService = {
 
     if (!response.ok) throw new Error('Failed to update medical history');
     return response.json();
+  },
+
+  // NEW: Fetch Scan History
+  async getUserHistory(token: string) {
+    const response = await fetch(`${API_URL}/med/history`, {
+      method: 'GET',
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+
+    if (!response.ok) {
+        if (response.status === 404) return [];
+        throw new Error('Failed to fetch history');
+    }
+    return response.json();
   }
 };
 
