@@ -10,7 +10,6 @@ Medical literacy is a massive barrier to healthcare in India:
 
 1. **Complex Reports:** Patients struggle to understand lab results (e.g., *"What does high Lymphocytes mean?"*).
 2. **Adverse Interactions:** Elderly patients often take multiple prescriptions without knowing if they conflict, leading to preventable hospitalizations.
-3. **Illegible Prescriptions:** Handwritten notes from doctors are often unreadable by patients.
 
 ## 💡 The Solution
 
@@ -18,7 +17,9 @@ Medical literacy is a massive barrier to healthcare in India:
 
 * **📄 Report Translator:** Upload a PDF/Image of a blood test. The AI extracts values, flags abnormalities, and explains them in plain English (or Hindi).
 * **💊 Drug Safety Shield:** Scan a medicine strip. The app identifies the drug and cross-references it with your *current* health profile to warn of risks (e.g., *"Don't take Ibuprofen; your Kidney function is low"*).
-* **✍️ Prescription Decoder:** Uses a fine-tuned Vision Transformer (TrOCR) to read doctor handwriting.
+* **🧠 MedGamma Intelligence:** Uses a fine-tuned local Transformer model to understand medical text and imagery without external APIs.
+* **🛡️ Privacy First:** No data processing on third-party clouds (Google/OpenAI). All inference happens within your container.
+
 
 ---
 
@@ -34,36 +35,30 @@ The system follows a microservices-ready architecture, containerized with Docker
 
 | Component | Technology | Role |
 | --- | --- | --- |
-| **Mobile App** | React Native (Expo), TypeScript | Cross-platform UI, Camera handling, Offline-first architecture. |
-| **Backend API** | FastAPI (Python 3.10+) | High-performance async API, Business logic. |
-| **Database** | MongoDB Atlas, Beanie ODM | Storing unstructured medical reports & user profiles. |
-| **AI - Reasoning** | Google Gemini Pro, LangChain | RAG pipeline for medical summarization & safety checks. |
-| **AI - Vision** | PaddleOCR, TrOCR, OpenCV | Extracting text from lab reports & handwritten prescriptions. |
-| **Data Source** | OpenFDA API | Real-time, authoritative drug labeling & interaction data. |
-| **DevOps** | Docker, GitHub Actions | Containerization and CI/CD pipelines. |
+| **Mobile App** | React Native (Expo) | Cross-platform UI for scanning and history. |
+| **Backend API** | FastAPI (Python 3.10) | Async API handling inference requests. |
+| **AI Engine** | **Hugging Face Transformers** | Running the local **MedGamma** model. |
+| **Database** | MongoDB Atlas (Beanie) | Storing user profiles and structured history. |
+| **Media Storage**| Cloudinary | Hosting encrypted medical documents. |
 
 ---
 
-## ✨ Key Features
+# ✨ Key Features
 
-### 1. 📊 Smart Report Analysis
+### 1. 📊 Local Analysis
+- **On-Device/On-Prem Inference:** Uses the `transformers` library to run MedGamma.
+- **Abnormality Detection:** Parses lab values and flags "Critical" statuses.
+- **Latency Optimized:** No network calls to LLM providers.
 
-* **OCR Pipeline:** Extracts data tables from messy scanned PDFs using PaddleOCR.
-* **Medical RAG:** Explains medical jargon using an LLM grounded in factual context (reducing hallucinations).
-* **Trend Tracking:** Visualizes how your health markers (e.g., Sugar, Iron) change over time.
+### 2. 🛡️ Context-Aware Safety
+- **Interaction Checker:** Checks Drug-Drug interactions using local knowledge bases.
+- **Personalized Warnings:** Detects conflicts between a new drug and your existing *Chronic Conditions*.
 
-### 2. 🛡️ Context-Aware Drug Safety
-
-* **Personalized Warnings:** Doesn't just list side effects; checks if *YOU* are at risk based on your upload history.
-* **Interaction Checker:** Detects Drug-Drug and Drug-Disease conflicts.
-
-### 3. 📝 Prescription Digitization (Beta)
-
-* Uses a **Transformer-based OCR (TrOCR)** fine-tuned on medical handwriting datasets to digitize doctor notes.
+### 3. 🕒 Medical Timeline
+- **History Tab:** View past scans with visual thumbnails.
+- **Secure Archive:** Reports are indexed and retrievable.
 
 ---
-
-## ⚡ Getting Started
 
 ### Prerequisites
 
@@ -72,28 +67,41 @@ The system follows a microservices-ready architecture, containerized with Docker
 * Docker & Docker Compose
 * MongoDB Atlas URI
 
-### 1. Clone the Repository
+###  Clone the Repository
 
 ```bash
 git clone https://github.com/yourusername/medinodus.git
 cd medinodus
 
 ```
+## ⚡ Deployment & Setup
 
-### 2. Backend Setup (FastAPI)
+### Environment Variables
+Create a `.env` file in the `backend/` directory:
 
-```bash
-cd backend
-# Create .env file
-cp .env.example .env 
-# Run with Docker (Recommended)
-docker-compose up --build
+```env
+MONGO_URL=mongodb+srv://<user>:<password>@cluster.mongodb.net/?retryWrites=true&w=majority
+CLOUDINARY_KEY=<your_cloudinary_secret>
+SECRET_KEY=<your_jwt_secret>
+HUGGING_FACE_API=<hf_auth_token>
+# No External AI Keys Required!
 
 ```
 
-*The API will be live at `http://localhost:8000*`
+### 1. Backend (Docker)
 
-### 3. Mobile Setup (React Native)
+The Docker build will install PyTorch and Transformers for local inference.
+
+```bash
+cd backend
+docker build -t medinodus-backend .
+docker run -p 8000:8000 --env-file .env medinodus-backend
+
+```
+
+*Note: The first run may take time to download the MedGamma model weights to the container.*
+
+### 2. Mobile App
 
 ```bash
 cd mobile
@@ -102,16 +110,10 @@ npx expo start
 
 ```
 
-*Scan the QR code with the Expo Go app to run on your phone.*
+*Scan the QR code with the **Expo Go** app on Android/iOS.*
 
 ---
 
-## 🧪 Testing & Quality
-
-We prioritize engineering excellence.
-
-* **Backend Tests:** Run `pytest` to execute 50+ unit tests ensuring API stability.
-* **Load Testing:** Validated with **Locust** to handle 500+ concurrent requests/sec.
 
 ## 🤝 Team
 
