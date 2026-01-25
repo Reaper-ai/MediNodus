@@ -33,8 +33,6 @@ export default function ScanScreen() {
   };
 
 
-
-  
 const processUpload = async () => {
     if (!tempFile) return;
 
@@ -45,7 +43,7 @@ const processUpload = async () => {
     }
 
     setShowTypeDialog(false); // Close dialog
-    setLoading(true); // Start loading (disables UI)
+    setLoading(true); 
 
     try {
       let response;
@@ -54,7 +52,7 @@ const processUpload = async () => {
         // Call Medicine Endpoint
         response = await apiService.uploadMedicineImage(tempFile.uri, token || '');
       } else {
-        // Call Report Endpoint (PDF or Image)
+        // Call Report Endpoint
         if (tempFile.type === 'pdf') {
           response = await apiService.uploadReportPdf(tempFile.uri, tempFile.name, token || '');
         } else {
@@ -64,11 +62,12 @@ const processUpload = async () => {
       
       Alert.alert("Success", "Analysis complete!");
 
-      // FIX: Stringify the data so it passes correctly to the Analysis screen
+      // FIX: Explicitly pass 'type' ('med' or 'report') so AnalysisScreen doesn't have to guess
       router.push({ 
         pathname: '/reports/analysis', 
         params: { 
-          data: JSON.stringify(response.message) 
+          data: JSON.stringify(response.message),
+          type: uploadCategory === 'medicine' ? 'med' : 'report' 
         } 
       });
 
