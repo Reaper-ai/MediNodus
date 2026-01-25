@@ -1,25 +1,23 @@
 fastapi>=0.100.0
 uvicorn[standard]
-motor                   # Async driver for MongoDB
-beanie                  # ODM for MongoDB
-uvicorn[standard]
-motor                   # Async driver for MongoDB
-beanie                  # ODM for MongoDB
-pydantic-settings       # For managing .env files
-python-multipart        # For file uploads (OCR images)
-python-jose[cryptography] # For JWT Auth
-passlib[bcrypt]         # Password hashing
-bcrypt==4.0.1
-langchain               # AI Logic
-opencv-python-headless  # Computer Vision (Server version)
-python-multipart        # For handling multipart/form-data (file uploads)
-python-dotenv>=1.0.0
-pymongo>=4.6.0
 motor>=3.3.0
 beanie>=1.20.0
 pydantic>=2.5.0
-langchain-google-genai>=0.0.10
+pydantic-settings
+python-multipart
+python-dotenv>=1.0.0
+python-jose[cryptography]
+passlib[bcrypt]
+bcrypt==4.0.1
 pytesseract>=0.3.10
+pdf2image
 Pillow>=10.0.0
 unidecode>=1.3.6
-pdf2image
+opencv-python-headless
+cloudinary
+torch
+transformers
+accelerate
+scipy
+protobuf
+sentencepiece

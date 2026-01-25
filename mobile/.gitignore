@@ -43,3 +43,41 @@ app-example
 /android
 
 /mobile/.vscode/
+
+# General
+__pycache__/
+*.py[cod]
+*$py.class
+.env
+.venv
+venv/
+*.log
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+docker-compose.override.yml
+
+# Mobile
+node_modules/
+.expo/
+dist/
+web-build/
+
+# Local AI Models & Cache (Hugging Face)
+*.bin
+*.pt
+*.pth
+*.ckpt
+*.safetensors
+*.onnx
+.cache/
+models/
+huggingface/

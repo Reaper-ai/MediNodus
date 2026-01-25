@@ -1,1 +1,29 @@
+# Use official lightweight Python image
+FROM python:3.10-slim
 
+# Set working directory
+WORKDIR /app
+
+# 1. Install System Dependencies (Required for OCR and PDF handling)
+# - tesseract-ocr: For reading text from images
+# - poppler-utils: For converting PDF to images (pdf2image)
+# - libgl1: Required by opencv-python-headless
+RUN apt-get update && apt-get install -y \
+    tesseract-ocr \
+    poppler-utils \
+    libgl1 \
+    libglib2.0-0 \
+    && rm -rf /var/lib/apt/lists/*
+
+# 2. Install Python Dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# 3. Copy Application Code
+COPY . .
+
+# Expose port
+EXPOSE 8000
+
+# 4. Start the Application
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
