@@ -1,0 +1,10 @@
+*/.env
+.venv
+frontend/node_modules
+frontend/.expo
+frontend/.expo-shared
+frontend/web-build
+tools/supabase/node_modules
+supabase/.branches
+supabase/.temp
+supabase/.config
