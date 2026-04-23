@@ -2,12 +2,13 @@ from __future__ import annotations
 
 import time
 
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 import httpx
-from fastapi import Header, HTTPException, status
+from fastapi import Depends, Header, HTTPException, status
 from jose import JWTError, jwk, jwt
 
 from ..config import get_settings
-
+security_scheme = HTTPBearer()
 
 def _extract_bearer_token(authorization: str | None) -> str:
     if not authorization:
@@ -78,16 +79,13 @@ def decode_jwt_token(token: str) -> dict:
     )
 
 
-def get_current_account_id(authorization: str = Header(None)) -> str:
-    token = _extract_bearer_token(authorization)
-
+def get_current_account_id(credentials: HTTPAuthorizationCredentials = Depends(security_scheme)) -> str:
+    token = credentials.credentials
     try:
         payload = decode_jwt_token(token)
     except JWTError as exc:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token") from exc
-
     account_id = payload.get("sub")
     if not account_id:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
-
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token payload")
     return account_id
