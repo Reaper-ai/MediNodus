@@ -21,7 +21,7 @@ create table account (
   username         text not null unique,
   email            text not null unique,
   mobile           text not null unique,
-  password_hash    text not null,
+  --password_hash    text not null,
   notif_prefs      jsonb not null default '{
     "medication_reminder": true,
     "appointment":         true,

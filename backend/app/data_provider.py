@@ -41,23 +41,59 @@ class SupabaseProvider:
         )
 
     def register_account(self, username: str, email: str, mobile: str, password: str) -> str:
+        # --- STEP 1: PRE-FLIGHT CHECKS (Do this BEFORE calling Auth) ---
+        # We combine these into one query to save speed and prevent rate limits
+        existing = self._service.table("account").select("username, email, mobile").or_(
+            f"username.eq.{username},email.eq.{email},mobile.eq.{mobile}"
+        ).execute().data
+
+        if existing:
+            conflict = existing[0]
+            if conflict.get("username") == username:
+                raise ProviderError("Username is already taken", 400)
+            if conflict.get("email") == email:
+                raise ProviderError("Email is already registered", 400)
+            if conflict.get("mobile") == mobile:
+                raise ProviderError("Mobile number is already registered", 400)
+
+        # --- STEP 2: SUPABASE AUTH (Only happens if Step 1 passes) ---
         try:
-            result = self._public.auth.sign_up({"email": email, "password": password})
-        except AuthApiError as exc:
-            raise ProviderError(exc.message or "Registration failed", 400) from exc
+            # Note: Using service.auth.admin.create_user is safer for dual email/phone 
+            # and avoids email rate limits if you set email_confirm=True
+            result = self._service.auth.admin.create_user({
+                "email": email,
+                "phone": mobile if mobile.startswith('+') else f"+91{mobile}",
+                "password": password,
+                "email_confirm": True,
+                "phone_confirm": True
+            })
+        except Exception as exc:
+            raise ProviderError(str(exc) or "Auth service unavailable", 500) from exc
 
         if not result.user:
-            raise ProviderError("Registration failed", 400)
+            raise ProviderError("Registration failed at Auth stage", 400)
 
         account_id = result.user.id
-        self._service.table("account").insert(
-            {
-                "id": account_id,
-                "username": username,
-                "email": email,
-                "mobile": mobile,
-            }
-        ).execute()
+
+        # --- STEP 3: DATABASE INSERT (With Rollback) ---
+        try:
+            self._service.table("account").insert(
+                {
+                    "id": account_id,
+                    "username": username,
+                    "email": email,
+                    "mobile": mobile,
+                }
+            ).execute()
+        except Exception as db_exc:
+            # If the database fails now, it's a true unexpected error (like a timeout)
+            # because we already checked for unique constraints in Step 1.
+            try:
+                self._service.auth.admin.delete_user(account_id)
+            except Exception as rollback_exc:
+                print(f"CRITICAL: Failed to rollback user {account_id}: {rollback_exc}")
+            
+            raise ProviderError("Database error during profile creation. Account rolled back.", 500) from db_exc
 
         return account_id
 
